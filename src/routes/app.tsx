@@ -620,7 +620,7 @@ function AppPage() {
                     aria-label="Download"
                     title="Download as Markdown"
                   ><Download className="h-3.5 w-3.5" /></button>
-                  <span className="font-mono text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-[var(--violet)] text-foreground border border-foreground">
+                  <span className="font-mono text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-[var(--violet)] text-[oklch(0.18_0.02_270)] border border-foreground">
                     {outputLang === "bn" ? "বাংলা" : "english"}
                   </span>
                 </div>
