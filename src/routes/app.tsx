@@ -9,6 +9,20 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ThemeToggle } from "@/components/landing/ThemeToggle";
 import { lazy, Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PopButton } from "@/components/workspace/PopButton";
+
+const EDITOR_THEMES: { id: string; label: string; bg: string; fg: string; accent: string }[] = [
+  { id: "auto", label: "Auto (system)", bg: "#0f172a", fg: "#e2e8f0", accent: "#60a5fa" },
+  { id: "vs-light", label: "Light", bg: "#ffffff", fg: "#1f2937", accent: "#2563eb" },
+  { id: "vs-dark", label: "Dark", bg: "#1e1e1e", fg: "#d4d4d4", accent: "#569cd6" },
+  { id: "hc-black", label: "High Contrast", bg: "#000000", fg: "#ffffff", accent: "#ffd700" },
+  { id: "monokai", label: "Monokai", bg: "#272822", fg: "#f8f8f2", accent: "#f92672" },
+  { id: "dracula", label: "Dracula", bg: "#282a36", fg: "#f8f8f2", accent: "#ff79c6" },
+  { id: "github-dark", label: "GitHub Dark", bg: "#0d1117", fg: "#c9d1d9", accent: "#ff7b72" },
+  { id: "solarized-light", label: "Solarized Light", bg: "#fdf6e3", fg: "#586e75", accent: "#859900" },
+  { id: "nord", label: "Nord", bg: "#2e3440", fg: "#d8dee9", accent: "#81a1c1" },
+];
 
 const Editor = lazy(() =>
   import("@monaco-editor/react").then((m) => ({ default: m.Editor ?? m.default }))
