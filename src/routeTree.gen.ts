@@ -9,12 +9,24 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SnippetsRouteImport } from './routes/snippets'
+import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiQuizRouteImport } from './routes/api/quiz'
 import { Route as ApiAnalyzeRouteImport } from './routes/api/analyze'
 
+const SnippetsRoute = SnippetsRouteImport.update({
+  id: '/snippets',
+  path: '/snippets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuizRoute = QuizRouteImport.update({
+  id: '/quiz',
+  path: '/quiz',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -45,6 +57,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRoute
   '/auth': typeof AuthRoute
+  '/quiz': typeof QuizRoute
+  '/snippets': typeof SnippetsRoute
   '/api/analyze': typeof ApiAnalyzeRoute
   '/api/quiz': typeof ApiQuizRoute
 }
@@ -52,6 +66,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/app': typeof AppRoute
   '/auth': typeof AuthRoute
+  '/quiz': typeof QuizRoute
+  '/snippets': typeof SnippetsRoute
   '/api/analyze': typeof ApiAnalyzeRoute
   '/api/quiz': typeof ApiQuizRoute
 }
@@ -60,27 +76,67 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/app': typeof AppRoute
   '/auth': typeof AuthRoute
+  '/quiz': typeof QuizRoute
+  '/snippets': typeof SnippetsRoute
   '/api/analyze': typeof ApiAnalyzeRoute
   '/api/quiz': typeof ApiQuizRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/app' | '/auth' | '/api/analyze' | '/api/quiz'
+  fullPaths:
+    | '/'
+    | '/app'
+    | '/auth'
+    | '/quiz'
+    | '/snippets'
+    | '/api/analyze'
+    | '/api/quiz'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/app' | '/auth' | '/api/analyze' | '/api/quiz'
-  id: '__root__' | '/' | '/app' | '/auth' | '/api/analyze' | '/api/quiz'
+  to:
+    | '/'
+    | '/app'
+    | '/auth'
+    | '/quiz'
+    | '/snippets'
+    | '/api/analyze'
+    | '/api/quiz'
+  id:
+    | '__root__'
+    | '/'
+    | '/app'
+    | '/auth'
+    | '/quiz'
+    | '/snippets'
+    | '/api/analyze'
+    | '/api/quiz'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRoute
   AuthRoute: typeof AuthRoute
+  QuizRoute: typeof QuizRoute
+  SnippetsRoute: typeof SnippetsRoute
   ApiAnalyzeRoute: typeof ApiAnalyzeRoute
   ApiQuizRoute: typeof ApiQuizRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/snippets': {
+      id: '/snippets'
+      path: '/snippets'
+      fullPath: '/snippets'
+      preLoaderRoute: typeof SnippetsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quiz': {
+      id: '/quiz'
+      path: '/quiz'
+      fullPath: '/quiz'
+      preLoaderRoute: typeof QuizRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -123,9 +179,20 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRoute,
   AuthRoute: AuthRoute,
+  QuizRoute: QuizRoute,
+  SnippetsRoute: SnippetsRoute,
   ApiAnalyzeRoute: ApiAnalyzeRoute,
   ApiQuizRoute: ApiQuizRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
