@@ -136,6 +136,21 @@
     outline-offset: 2px;
     border-radius: 6px;
   }
+  /* Force dark ink on bright accent surfaces so text stays readable in dark mode */
+  .bg-\[var\(--lime\)\],
+  .bg-\[var\(--coral\)\],
+  .bg-\[var\(--violet\)\],
+  .bg-\[var\(--sky\)\],
+  .bg-\[var\(--amber\)\] {
+    color: oklch(0.18 0.02 270);
+  }
+  .bg-\[var\(--lime\)\] *:not(svg):not([class*="text-"]),
+  .bg-\[var\(--coral\)\] *:not(svg):not([class*="text-"]),
+  .bg-\[var\(--violet\)\] *:not(svg):not([class*="text-"]),
+  .bg-\[var\(--sky\)\] *:not(svg):not([class*="text-"]),
+  .bg-\[var\(--amber\)\] *:not(svg):not([class*="text-"]) {
+    color: inherit;
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
