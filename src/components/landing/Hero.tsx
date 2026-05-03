@@ -55,7 +55,7 @@ export function Hero() {
           >
             <Magnetic>
               <a
-                href="#start"
+                href="/auth"
                 data-cursor="hover"
                 data-cursor-label="let's go"
                 className="inline-flex items-center gap-1.5 h-12 px-5 rounded-2xl bg-[var(--coral)] border-2 border-foreground text-foreground font-bold shadow-pop-lg hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
