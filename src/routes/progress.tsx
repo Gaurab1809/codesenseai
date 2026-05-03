@@ -8,6 +8,26 @@ import { BarChart3, Loader2, ArrowRight, GraduationCap, FileCode, Flame, Trophy,
 
 type Result = { id: string; topic: string; language: string; score: number; total: number; created_at: string; difficulty?: string };
 
+function topicStreak(rows: Result[]): { current: number; longest: number } {
+  if (rows.length === 0) return { current: 0, longest: 0 };
+  const days = Array.from(new Set(rows.map((r) => new Date(r.created_at).toISOString().slice(0, 10)))).sort();
+  let longest = 1, run = 1;
+  for (let i = 1; i < days.length; i++) {
+    const diff = Math.round((new Date(days[i]).getTime() - new Date(days[i - 1]).getTime()) / 86400000);
+    if (diff === 1) { run += 1; longest = Math.max(longest, run); } else run = 1;
+  }
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const set = new Set(days);
+  let current = 0;
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today.getTime() - i * 86400000).toISOString().slice(0, 10);
+    if (set.has(d)) current += 1;
+    else if (i === 0) continue;
+    else break;
+  }
+  return { current, longest };
+}
+
 export const Route = createFileRoute("/progress")({
   head: () => ({ meta: [{ title: "Progress · CodeSense AI" }] }),
   component: ProgressPage,
@@ -98,6 +118,27 @@ function ProgressPage() {
     ];
     return list;
   }, [items, stats, streak]);
+
+  const byTopic = useMemo(() => {
+    const map = new Map<string, Result[]>();
+    items.forEach((r) => {
+      const k = `${r.topic} · ${r.language}`;
+      const arr = map.get(k) ?? [];
+      arr.push(r);
+      map.set(k, arr);
+    });
+    return [...map.entries()]
+      .map(([key, rows]) => {
+        const sorted = rows.slice().sort((a, b) => +new Date(a.created_at) - +new Date(b.created_at));
+        const pcts = sorted.map((r) => (r.total > 0 ? r.score / r.total : 0));
+        const avg = pcts.reduce((a, b) => a + b, 0) / pcts.length;
+        const last = pcts[pcts.length - 1];
+        const first = pcts[0];
+        const stk = topicStreak(rows);
+        return { key, rows: sorted, pcts, avg, last, first, n: rows.length, streak: stk };
+      })
+      .sort((a, b) => b.n - a.n);
+  }, [items]);
 
   if (!ready) return <div className="min-h-screen grid place-items-center bg-background"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
 
@@ -215,6 +256,37 @@ function ProgressPage() {
             </div>
           </section>
         )}
+
+        {byTopic.length > 0 && (
+          <section className="rounded-2xl border-[2.5px] border-foreground bg-card p-5 shadow-pop">
+            <div className="font-display font-bold text-lg inline-flex items-center gap-2"><Sparkles className="h-5 w-5" /> By topic</div>
+            <p className="text-[12px] text-muted-foreground mt-1">Scores and streaks per concept over time.</p>
+            <div className="mt-4 grid sm:grid-cols-2 gap-3">
+              {byTopic.map((t) => {
+                const trend = t.last - t.first;
+                return (
+                  <div key={t.key} className="rounded-xl border-2 border-foreground p-3 bg-subtle/40">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-display font-bold text-[13.5px] truncate">{t.key}</div>
+                        <div className="text-[11px] font-mono text-muted-foreground">{t.n} quiz{t.n === 1 ? "" : "zes"} · avg {Math.round(t.avg * 100)}%</div>
+                      </div>
+                      <span className={`inline-flex items-center gap-1 text-[10.5px] font-bold px-1.5 py-0.5 rounded border-2 border-foreground ${trend >= 0 ? "bg-[var(--lime)]" : "bg-[var(--coral)]"}`}>
+                        {trend >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                        {trend >= 0 ? "+" : ""}{Math.round(trend * 100)}%
+                      </span>
+                    </div>
+                    <Sparkline values={t.pcts} />
+                    <div className="mt-2 flex items-center justify-between text-[11px] font-mono text-muted-foreground">
+                      <span className="inline-flex items-center gap-1"><Flame className="h-3 w-3" /> {t.streak.current}d / best {t.streak.longest}d</span>
+                      <span>last {Math.round(t.last * 100)}%</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
       </main>
     </div>
   );
@@ -226,5 +298,20 @@ function Stat({ label, value, color }: { label: string; value: string | number; 
       <div className="text-[11px] font-mono uppercase tracking-widest opacity-70">{label}</div>
       <div className="mt-1 text-2xl font-display font-bold">{value}</div>
     </div>
+  );
+}
+
+function Sparkline({ values }: { values: number[] }) {
+  if (values.length === 0) return null;
+  const W = 220, H = 36, P = 2;
+  const step = values.length > 1 ? (W - P * 2) / (values.length - 1) : 0;
+  const pts = values.map((v, i) => `${P + i * step},${H - P - v * (H - P * 2)}`).join(" ");
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="mt-2 w-full h-9">
+      <polyline fill="none" stroke="currentColor" strokeWidth="2" points={pts} />
+      {values.map((v, i) => (
+        <circle key={i} cx={P + i * step} cy={H - P - v * (H - P * 2)} r="2.5" fill="currentColor" />
+      ))}
+    </svg>
   );
 }
