@@ -1,14 +1,14 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Float, Text } from "@react-three/drei";
-import { Suspense, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 const TOKENS = ["</>", "{ }", "=>", "[ ]", "( )", "&&", "||", "fn", "≡", "λ", "AI", "*"];
 const COLORS = ["#ff6b6b", "#c8ff5a", "#7ad3ff", "#c8a6ff", "#ffd166"];
 
-function Particles({ pointer }: { pointer: { x: number; y: number } }) {
+function Particles({ pointer, count }: { pointer: { x: number; y: number }; count: number }) {
   const ref = useRef<THREE.Points>(null);
-  const COUNT = 600;
+  const COUNT = count;
   const { positions, base } = useMemo(() => {
     const positions = new Float32Array(COUNT * 3);
     const base = new Float32Array(COUNT * 3);
@@ -104,7 +104,7 @@ function OrbitToken({ token, color, radius, speed, offset, tilt }: {
   );
 }
 
-function Scene({ pointer }: { pointer: { x: number; y: number } }) {
+function Scene({ pointer, count }: { pointer: { x: number; y: number }; count: number }) {
   return (
     <>
       <ambientLight intensity={0.55} />
@@ -112,7 +112,7 @@ function Scene({ pointer }: { pointer: { x: number; y: number } }) {
       <pointLight position={[-5, -3, 2]} intensity={1} color="#7ad3ff" />
       <directionalLight position={[0, 5, 5]} intensity={0.6} />
       <Core pointer={pointer} />
-      <Particles pointer={pointer} />
+      <Particles pointer={pointer} count={count} />
       {TOKENS.map((tk, i) => (
         <OrbitToken
           key={i}
@@ -130,6 +130,21 @@ function Scene({ pointer }: { pointer: { x: number; y: number } }) {
 
 export function CodeCore3D() {
   const pointer = useRef({ x: 0, y: 0 });
+  const [tier, setTier] = useState<{ count: number; dpr: [number, number]; reduced: boolean }>({ count: 600, dpr: [1, 1.6], reduced: false });
+  useEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const w = window.innerWidth;
+    const isMobile = w < 768;
+    const isTablet = w < 1200;
+    setTier({
+      count: reduced ? 120 : isMobile ? 220 : isTablet ? 380 : 600,
+      dpr: isMobile ? [1, 1.2] : [1, 1.6],
+      reduced,
+    });
+  }, []);
+  if (tier.reduced) {
+    return <div className="absolute inset-0 bg-gradient-to-br from-[var(--coral)]/10 via-transparent to-[var(--sky)]/10" aria-hidden />;
+  }
   return (
     <div
       className="absolute inset-0"
@@ -140,9 +155,9 @@ export function CodeCore3D() {
       }}
       aria-hidden
     >
-      <Canvas camera={{ position: [0, 0, 6], fov: 55 }} dpr={[1, 1.6]}>
+      <Canvas camera={{ position: [0, 0, 6], fov: 55 }} dpr={tier.dpr} gl={{ antialias: false, powerPreference: "high-performance" }}>
         <Suspense fallback={null}>
-          <Scene pointer={pointer.current} />
+          <Scene pointer={pointer.current} count={tier.count} />
         </Suspense>
       </Canvas>
     </div>
