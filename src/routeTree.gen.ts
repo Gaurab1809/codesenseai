@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SnippetsRouteImport } from './routes/snippets'
 import { Route as QuizRouteImport } from './routes/quiz'
+import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
@@ -25,6 +26,11 @@ const SnippetsRoute = SnippetsRouteImport.update({
 const QuizRoute = QuizRouteImport.update({
   id: '/quiz',
   path: '/quiz',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProgressRoute = ProgressRouteImport.update({
+  id: '/progress',
+  path: '/progress',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRoute
   '/auth': typeof AuthRoute
+  '/progress': typeof ProgressRoute
   '/quiz': typeof QuizRoute
   '/snippets': typeof SnippetsRoute
   '/api/analyze': typeof ApiAnalyzeRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/app': typeof AppRoute
   '/auth': typeof AuthRoute
+  '/progress': typeof ProgressRoute
   '/quiz': typeof QuizRoute
   '/snippets': typeof SnippetsRoute
   '/api/analyze': typeof ApiAnalyzeRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/app': typeof AppRoute
   '/auth': typeof AuthRoute
+  '/progress': typeof ProgressRoute
   '/quiz': typeof QuizRoute
   '/snippets': typeof SnippetsRoute
   '/api/analyze': typeof ApiAnalyzeRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/auth'
+    | '/progress'
     | '/quiz'
     | '/snippets'
     | '/api/analyze'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/auth'
+    | '/progress'
     | '/quiz'
     | '/snippets'
     | '/api/analyze'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/auth'
+    | '/progress'
     | '/quiz'
     | '/snippets'
     | '/api/analyze'
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRoute
   AuthRoute: typeof AuthRoute
+  ProgressRoute: typeof ProgressRoute
   QuizRoute: typeof QuizRoute
   SnippetsRoute: typeof SnippetsRoute
   ApiAnalyzeRoute: typeof ApiAnalyzeRoute
@@ -135,6 +148,13 @@ declare module '@tanstack/react-router' {
       path: '/quiz'
       fullPath: '/quiz'
       preLoaderRoute: typeof QuizRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/progress': {
+      id: '/progress'
+      path: '/progress'
+      fullPath: '/progress'
+      preLoaderRoute: typeof ProgressRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRoute,
   AuthRoute: AuthRoute,
+  ProgressRoute: ProgressRoute,
   QuizRoute: QuizRoute,
   SnippetsRoute: SnippetsRoute,
   ApiAnalyzeRoute: ApiAnalyzeRoute,
