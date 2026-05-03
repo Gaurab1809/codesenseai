@@ -136,11 +136,14 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     transition: background-color 0.4s ease, color 0.4s ease;
-    cursor: none;
   }
-  @media (pointer: coarse) {
-    body { cursor: auto; }
-  }
+  body.fun-cursor-active { cursor: none; }
+  body.fun-cursor-active a,
+  body.fun-cursor-active button,
+  body.fun-cursor-active [role='button'],
+  body.fun-cursor-active input,
+  body.fun-cursor-active textarea,
+  body.fun-cursor-active select { cursor: none; }
   h1, h2, h3, h4 {
     font-family: var(--font-display);
     letter-spacing: -0.025em;
