@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/brand/Logo";
 import { toast } from "sonner";
@@ -8,7 +8,6 @@ import { Loader2, Plus, Trash2, Pencil, LogOut, Languages, Play, FileCode, Save,
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Editor from "@monaco-editor/react";
-import { useRef } from "react";
 
 type Analysis = {
   id: string;
