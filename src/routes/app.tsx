@@ -467,7 +467,7 @@ function AppPage() {
 
       <div className="grid lg:grid-cols-[260px_1fr] min-h-[calc(100vh-3.5rem)]">
         {/* History panel */}
-        <aside className="border-r-2 border-foreground bg-subtle/40 p-3 space-y-3 overflow-y-auto max-h-[calc(100vh-3.5rem)]">
+        <aside className="order-2 lg:order-1 border-t-2 lg:border-t-0 lg:border-r-2 border-foreground bg-subtle/40 p-3 space-y-3 overflow-y-auto lg:max-h-[calc(100vh-3.5rem)]">
           <button
             onClick={newAnalysis}
             className="w-full h-10 rounded-xl border-2 border-foreground bg-[var(--lime)] text-[oklch(0.18_0.02_270)] font-bold text-[13px] shadow-pop hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all inline-flex items-center justify-center gap-1.5"
@@ -566,7 +566,7 @@ function AppPage() {
         </aside>
 
         {/* Main */}
-        <main className="p-3 sm:p-4 lg:p-6 space-y-4">
+        <main className="order-1 lg:order-2 p-3 sm:p-4 lg:p-6 space-y-4">
           {/* Title row */}
           <div className="flex flex-wrap items-center gap-2">
             <input
