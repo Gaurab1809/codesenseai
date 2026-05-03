@@ -86,6 +86,16 @@ function AppPage() {
       else {
         setReady(true);
         loadList();
+        const pre = sessionStorage.getItem("workspace.preload");
+        if (pre) {
+          try {
+            const p = JSON.parse(pre);
+            setName(p.name ?? "Untitled analysis");
+            setLanguage(p.language ?? "javascript");
+            setCode(p.code ?? "");
+          } catch {}
+          sessionStorage.removeItem("workspace.preload");
+        }
       }
     });
     return () => sub.subscription.unsubscribe();
