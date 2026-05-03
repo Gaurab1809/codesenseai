@@ -130,6 +130,12 @@
 @layer base {
   * { border-color: var(--color-border); }
   html { scroll-behavior: smooth; }
+  /* Visible focus ring for keyboard users across the app */
+  :where(a, button, [role="button"], [role="tab"], [role="option"], input, select, textarea):focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
