@@ -7,6 +7,7 @@ const Body = z.object({
   language: z.string().min(1).max(40),
   outputLang: z.enum(["en", "bn"]).default("en"),
   count: z.number().int().min(3).max(8).default(5),
+  difficulty: z.enum(["easy", "medium", "hard"]).default("medium"),
 });
 
 export const Route = createFileRoute("/api/quiz")({
@@ -43,7 +44,14 @@ export const Route = createFileRoute("/api/quiz")({
           ? "Write all questions and explanations in Bangla (Bengali script). Keep code/identifiers in English."
           : "Write in clear, beginner-friendly English.";
 
+        const diffInstr = body.difficulty === "easy"
+          ? "Target absolute beginners. Focus on naming, syntax, and reading the code. Distractors should be obviously wrong."
+          : body.difficulty === "hard"
+          ? "Target advanced learners. Include subtle edge cases, complexity analysis, and tricky predict-the-output questions. Distractors must be plausible."
+          : "Target intermediate learners with a balanced mix of concept and prediction questions.";
+
         const system = `You are a programming quiz author. Create high-quality multiple-choice and prediction questions from the given code. ${langInstr}
+Difficulty: ${body.difficulty}. ${diffInstr}
 Mix question types: concept understanding, predict-the-output, and bug spotting.
 Return ONLY via the provided tool call.`;
 

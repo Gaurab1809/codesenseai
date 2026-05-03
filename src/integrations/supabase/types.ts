@@ -55,6 +55,7 @@ export type Database = {
           analysis_id: string | null
           created_at: string
           details: Json | null
+          difficulty: string
           id: string
           language: string
           score: number
@@ -66,6 +67,7 @@ export type Database = {
           analysis_id?: string | null
           created_at?: string
           details?: Json | null
+          difficulty?: string
           id?: string
           language?: string
           score?: number
@@ -77,6 +79,7 @@ export type Database = {
           analysis_id?: string | null
           created_at?: string
           details?: Json | null
+          difficulty?: string
           id?: string
           language?: string
           score?: number
@@ -101,6 +104,7 @@ export type Database = {
           id: string
           language: string
           name: string
+          tags: string[]
           updated_at: string
           user_id: string
         }
@@ -110,6 +114,7 @@ export type Database = {
           id?: string
           language?: string
           name?: string
+          tags?: string[]
           updated_at?: string
           user_id: string
         }
@@ -119,6 +124,7 @@ export type Database = {
           id?: string
           language?: string
           name?: string
+          tags?: string[]
           updated_at?: string
           user_id?: string
         }

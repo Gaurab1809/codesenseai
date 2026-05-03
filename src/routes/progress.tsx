@@ -4,9 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/brand/Logo";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
-import { BarChart3, Loader2, ArrowRight, GraduationCap, FileCode } from "lucide-react";
+import { BarChart3, Loader2, ArrowRight, GraduationCap, FileCode, Flame, Trophy, Sparkles, TrendingUp, TrendingDown } from "lucide-react";
 
-type Result = { id: string; topic: string; language: string; score: number; total: number; created_at: string };
+type Result = { id: string; topic: string; language: string; score: number; total: number; created_at: string; difficulty?: string };
 
 export const Route = createFileRoute("/progress")({
   head: () => ({ meta: [{ title: "Progress · CodeSense AI" }] }),
@@ -54,6 +54,51 @@ function ProgressPage() {
     return { avg, best, total, byLang };
   }, [items]);
 
+  const streak = useMemo(() => {
+    if (items.length === 0) return { current: 0, longest: 0 };
+    const days = Array.from(new Set(items.map((r) => new Date(r.created_at).toISOString().slice(0, 10)))).sort();
+    let longest = 1, run = 1;
+    for (let i = 1; i < days.length; i++) {
+      const prev = new Date(days[i - 1]); const cur = new Date(days[i]);
+      const diff = Math.round((cur.getTime() - prev.getTime()) / 86400000);
+      if (diff === 1) { run += 1; longest = Math.max(longest, run); } else { run = 1; }
+    }
+    // current streak: walk backwards from today/yesterday
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const set = new Set(days);
+    let current = 0;
+    for (let i = 0; i < 365; i++) {
+      const d = new Date(today.getTime() - i * 86400000).toISOString().slice(0, 10);
+      if (set.has(d)) current += 1;
+      else if (i === 0) continue; // allow no-quiz today
+      else break;
+    }
+    return { current, longest };
+  }, [items]);
+
+  const trend = useMemo(() => {
+    if (items.length < 4) return 0;
+    const pct = items.map((r) => (r.total > 0 ? r.score / r.total : 0));
+    const half = Math.floor(pct.length / 2);
+    const earlyAvg = pct.slice(0, half).reduce((a, b) => a + b, 0) / half;
+    const lateAvg = pct.slice(half).reduce((a, b) => a + b, 0) / (pct.length - half);
+    return lateAvg - earlyAvg;
+  }, [items]);
+
+  const milestones = useMemo(() => {
+    const list = [
+      { id: "first", label: "First quiz", icon: Sparkles, achieved: stats.total >= 1, color: "var(--lime)" },
+      { id: "five", label: "5 quizzes", icon: GraduationCap, achieved: stats.total >= 5, color: "var(--sky)" },
+      { id: "ten", label: "10 quizzes", icon: GraduationCap, achieved: stats.total >= 10, color: "var(--violet)" },
+      { id: "perfect", label: "Perfect run", icon: Trophy, achieved: items.some((r) => r.total > 0 && r.score === r.total), color: "var(--amber)" },
+      { id: "streak3", label: "3-day streak", icon: Flame, achieved: streak.longest >= 3, color: "var(--coral)" },
+      { id: "streak7", label: "7-day streak", icon: Flame, achieved: streak.longest >= 7, color: "var(--coral)" },
+      { id: "polyglot", label: "3 languages", icon: FileCode, achieved: stats.byLang.length >= 3, color: "var(--lime)" },
+      { id: "expert", label: "80% average", icon: Trophy, achieved: stats.avg >= 0.8 && stats.total >= 3, color: "var(--amber)" },
+    ];
+    return list;
+  }, [items, stats, streak]);
+
   if (!ready) return <div className="min-h-screen grid place-items-center bg-background"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
 
   const max = Math.max(1, ...items.map((r) => (r.total > 0 ? r.score / r.total : 0)));
@@ -81,12 +126,54 @@ function ProgressPage() {
           </h1>
         </div>
 
-        <div className="grid sm:grid-cols-4 gap-3">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <Stat color="var(--lime)" label="Quizzes taken" value={stats.total} />
           <Stat color="var(--sky)" label="Average score" value={`${Math.round(stats.avg * 100)}%`} />
           <Stat color="var(--amber)" label="Best run" value={`${Math.round(stats.best * 100)}%`} />
+          <Stat color="var(--coral)" label="Current streak" value={`${streak.current}d 🔥`} />
           <Stat color="var(--violet)" label="Saved code" value={`${analyses}A · ${snippets}S`} />
         </div>
+
+        <section className="rounded-2xl border-[2.5px] border-foreground bg-card p-5 shadow-pop">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="font-display font-bold text-lg inline-flex items-center gap-2"><Flame className="h-5 w-5" /> Streak & trend</div>
+            {items.length >= 4 && (
+              <span className={`inline-flex items-center gap-1 text-[12px] font-bold px-2 py-1 rounded border-2 border-foreground ${trend >= 0 ? "bg-[var(--lime)]" : "bg-[var(--coral)]"}`}>
+                {trend >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
+                {trend >= 0 ? "+" : ""}{Math.round(trend * 100)}% vs early quizzes
+              </span>
+            )}
+          </div>
+          <div className="mt-3 grid sm:grid-cols-2 gap-3 text-[13px]">
+            <div className="rounded-xl border-2 border-foreground p-3 bg-subtle">
+              <div className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">Current</div>
+              <div className="text-2xl font-display font-bold">{streak.current} day{streak.current === 1 ? "" : "s"}</div>
+              <div className="text-muted-foreground text-[12px]">Take a quiz today to keep it alive.</div>
+            </div>
+            <div className="rounded-xl border-2 border-foreground p-3 bg-subtle">
+              <div className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">Longest</div>
+              <div className="text-2xl font-display font-bold">{streak.longest} day{streak.longest === 1 ? "" : "s"}</div>
+              <div className="text-muted-foreground text-[12px]">Your personal best.</div>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-2xl border-[2.5px] border-foreground bg-card p-5 shadow-pop">
+          <div className="font-display font-bold text-lg inline-flex items-center gap-2"><Trophy className="h-5 w-5" /> Milestones</div>
+          <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {milestones.map((m) => (
+              <div
+                key={m.id}
+                className={`rounded-xl border-2 border-foreground p-3 transition-all ${m.achieved ? "shadow-pop -translate-y-0.5" : "opacity-50"}`}
+                style={{ background: m.achieved ? m.color : undefined }}
+              >
+                <m.icon className="h-5 w-5" />
+                <div className="mt-1 font-display font-bold text-[13px]">{m.label}</div>
+                <div className="text-[10.5px] font-mono uppercase tracking-widest opacity-70">{m.achieved ? "unlocked" : "locked"}</div>
+              </div>
+            ))}
+          </div>
+        </section>
 
         <section className="rounded-2xl border-[2.5px] border-foreground bg-card p-5 shadow-pop">
           <div className="font-display font-bold text-lg inline-flex items-center gap-2"><GraduationCap className="h-5 w-5" /> Quiz history</div>
