@@ -4,10 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/brand/Logo";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
-import { Loader2, Check, X, ArrowRight, RotateCcw, GraduationCap, BarChart3 } from "lucide-react";
+import { Loader2, Check, X, ArrowRight, RotateCcw, GraduationCap, BarChart3, BookOpen, Flame, Snowflake, Zap } from "lucide-react";
 
 type Q = { type: "mcq" | "predict"; question: string; options: string[]; answerIndex: number; explanation: string };
 type Quiz = { topic: string; questions: Q[] };
+type Difficulty = "easy" | "medium" | "hard";
 
 export const Route = createFileRoute("/quiz")({
   head: () => ({ meta: [{ title: "Quiz · CodeSense AI" }] }),
@@ -22,6 +23,8 @@ function QuizPage() {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [done, setDone] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
+  const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   const [meta, setMeta] = useState<{ name: string; language: string; analysisId: string | null; outputLang: "en" | "bn" } | null>(null);
 
   useEffect(() => {
@@ -35,11 +38,27 @@ function QuizPage() {
       if (!raw) { toast.error("Open a snippet from the workspace first."); navigate({ to: "/app" }); return; }
       const payload = JSON.parse(raw);
       setMeta({ name: payload.name, language: payload.language, analysisId: payload.analysisId ?? null, outputLang: payload.outputLang ?? "en" });
+        // Adaptive difficulty: look at last 3 quiz results in this language
+        const uid = data.session.user.id;
+        const { data: recent } = await supabase
+          .from("quiz_results")
+          .select("score,total")
+          .eq("user_id", uid)
+          .eq("language", payload.language)
+          .order("created_at", { ascending: false })
+          .limit(3);
+        let nextDiff: Difficulty = "medium";
+        if (recent && recent.length > 0) {
+          const avg = recent.reduce((a, r) => a + (r.total > 0 ? r.score / r.total : 0), 0) / recent.length;
+          if (avg >= 0.8) nextDiff = "hard";
+          else if (avg < 0.5) nextDiff = "easy";
+        }
+        setDifficulty(nextDiff);
       try {
         const res = await fetch("/api/quiz", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session.access_token}` },
-          body: JSON.stringify({ code: payload.code, language: payload.language, outputLang: payload.outputLang ?? "en", count: 5 }),
+            body: JSON.stringify({ code: payload.code, language: payload.language, outputLang: payload.outputLang ?? "en", count: 5, difficulty: nextDiff }),
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error ?? "Failed");
@@ -77,12 +96,13 @@ function QuizPage() {
         topic: quiz.topic,
         language: meta.language,
         score, total: quiz.questions.length,
+        difficulty,
         details: { answers, questions: quiz.questions },
       });
     }
   }
 
-  function restart() { setAnswers([]); setStep(0); setDone(false); }
+  function restart() { setAnswers([]); setStep(0); setDone(false); setReviewing(false); }
 
   if (!ready || loading) {
     return (
