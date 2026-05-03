@@ -4,6 +4,7 @@ import { Hero } from "@/components/landing/Hero";
 import { Features } from "@/components/landing/Features";
 import { DemoPreview } from "@/components/landing/DemoPreview";
 import { ThemePlayground } from "@/components/landing/ThemePlayground";
+import { CodeCoreSection } from "@/components/landing/CodeCoreSection";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { Pricing } from "@/components/landing/Pricing";
 import { FAQ } from "@/components/landing/FAQ";
@@ -23,6 +24,7 @@ function Index() {
       <main>
         <Hero />
         <Features />
+        <CodeCoreSection />
         <DemoPreview />
         <ThemePlayground />
         <Testimonials />

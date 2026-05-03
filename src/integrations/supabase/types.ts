@@ -50,6 +50,80 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_results: {
+        Row: {
+          analysis_id: string | null
+          created_at: string
+          details: Json | null
+          id: string
+          language: string
+          score: number
+          topic: string
+          total: number
+          user_id: string
+        }
+        Insert: {
+          analysis_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          language?: string
+          score?: number
+          topic?: string
+          total?: number
+          user_id: string
+        }
+        Update: {
+          analysis_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          language?: string
+          score?: number
+          topic?: string
+          total?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_results_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      snippets: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          language: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          language?: string
+          name?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          language?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
