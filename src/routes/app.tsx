@@ -470,7 +470,7 @@ function AppPage() {
         <aside className="border-r-2 border-foreground bg-subtle/40 p-3 space-y-3 overflow-y-auto max-h-[calc(100vh-3.5rem)]">
           <button
             onClick={newAnalysis}
-            className="w-full h-10 rounded-xl border-2 border-foreground bg-[var(--lime)] font-bold text-[13px] shadow-pop hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all inline-flex items-center justify-center gap-1.5"
+            className="w-full h-10 rounded-xl border-2 border-foreground bg-[var(--lime)] text-[oklch(0.18_0.02_270)] font-bold text-[13px] shadow-pop hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all inline-flex items-center justify-center gap-1.5"
           >
             <Plus className="h-4 w-4" /> New analysis
           </button>
