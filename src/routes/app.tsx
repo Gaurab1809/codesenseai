@@ -169,18 +169,8 @@ function AppPage() {
   const [mode, setMode] = useState<"explain" | "bugs" | "optimize" | "security" | "bangla">("explain");
   const fileRef = useRef<HTMLInputElement>(null);
   const navigate2 = useNavigate();
-  const EDITOR_THEMES = [
-    { id: "auto", label: "Auto (system)" },
-    { id: "vs-light", label: "Light" },
-    { id: "vs-dark", label: "Dark" },
-    { id: "hc-black", label: "High Contrast" },
-    { id: "monokai", label: "Monokai" },
-    { id: "dracula", label: "Dracula" },
-    { id: "github-dark", label: "GitHub Dark" },
-    { id: "solarized-light", label: "Solarized Light" },
-    { id: "nord", label: "Nord" },
-  ] as const;
   const [editorTheme, setEditorTheme] = useState<string>("auto");
+  const [themePickerOpen, setThemePickerOpen] = useState(false);
   useEffect(() => {
     const saved = typeof window !== "undefined" ? localStorage.getItem("workspace.editorTheme") : null;
     if (saved) setEditorTheme(saved);
@@ -189,6 +179,18 @@ function AppPage() {
     if (typeof window !== "undefined") localStorage.setItem("workspace.editorTheme", editorTheme);
   }, [editorTheme]);
   const resolvedEditorTheme = editorTheme === "auto" ? (isDark ? "vs-dark" : "vs-light") : editorTheme;
+  const activeThemeMeta = EDITOR_THEMES.find((t) => t.id === editorTheme) ?? EDITOR_THEMES[0];
+  useEffect(() => {
+    if (!themePickerOpen) return;
+    const onClick = (e: MouseEvent) => {
+      const t = e.target as HTMLElement;
+      if (!t.closest("[data-theme-picker]")) setThemePickerOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setThemePickerOpen(false); };
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onClick); document.removeEventListener("keydown", onKey); };
+  }, [themePickerOpen]);
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
