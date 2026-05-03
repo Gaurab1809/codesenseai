@@ -15,6 +15,7 @@ export function FunCursor() {
     if (typeof window === "undefined") return;
     if (!window.matchMedia("(pointer: fine)").matches) return;
     setEnabled(true);
+    document.body.classList.add("fun-cursor-active");
 
     let mx = window.innerWidth / 2;
     let my = window.innerHeight / 2;
@@ -66,6 +67,7 @@ export function FunCursor() {
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("mousemove", onMove);
+      document.body.classList.remove("fun-cursor-active");
     };
   }, []);
 
