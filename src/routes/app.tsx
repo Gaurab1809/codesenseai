@@ -684,7 +684,7 @@ function AppPage() {
           </div>
 
           {/* Mode tabs */}
-          <div className="flex flex-wrap gap-1.5">
+          <div role="tablist" aria-label="Analysis mode" className="flex flex-wrap gap-1.5">
             {([
               { id: "explain", label: "Explain", icon: Sparkles, color: "var(--lime)" },
               { id: "bugs", label: "Bugs", icon: Bug, color: "var(--coral)" },
@@ -694,11 +694,14 @@ function AppPage() {
             ] as const).map((m) => (
               <button
                 key={m.id}
+                role="tab"
+                aria-selected={mode === m.id}
+                aria-label={`${m.label} mode`}
                 onClick={() => setMode(m.id)}
-                className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border-2 border-foreground text-[12.5px] font-bold transition-all ${mode === m.id ? "shadow-pop -translate-y-0.5 text-[oklch(0.18_0.02_270)]" : "bg-card text-foreground hover:-translate-y-0.5 hover:shadow-pop"}`}
+                className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border-2 border-foreground text-[12.5px] font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-background ${mode === m.id ? "shadow-pop -translate-y-0.5 text-[oklch(0.18_0.02_270)]" : "bg-card text-foreground hover:-translate-y-0.5 hover:shadow-pop"}`}
                 style={mode === m.id ? { background: m.color } : undefined}
               >
-                <m.icon className="h-3.5 w-3.5" /> {m.label}
+                <m.icon className="h-3.5 w-3.5" aria-hidden="true" /> {m.label}
               </button>
             ))}
           </div>
@@ -771,10 +774,19 @@ function AppPage() {
                   </span>
                 </div>
               </div>
-              <div className="p-5 h-[480px] overflow-y-auto">
+              <div className="p-5 h-[480px] overflow-y-auto" aria-live="polite" aria-busy={analyzing}>
                 {analyzing && !aiResponse && (
-                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Reading your code…
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Reading your code…
+                    </div>
+                    <Skeleton className="h-5 w-1/3" />
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-3 w-11/12" />
+                    <Skeleton className="h-3 w-9/12" />
+                    <Skeleton className="h-24 w-full mt-2" />
+                    <Skeleton className="h-3 w-10/12" />
+                    <Skeleton className="h-3 w-8/12" />
                   </div>
                 )}
                 {!analyzing && !aiResponse && (
