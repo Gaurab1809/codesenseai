@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/brand/Logo";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
-import { Loader2, Check, X, ArrowRight, RotateCcw, GraduationCap, BarChart3, BookOpen, Flame, Snowflake, Zap } from "lucide-react";
+import { Loader2, Check, X, ArrowRight, RotateCcw, GraduationCap, BarChart3, BookOpen, Flame, Snowflake, Zap, Download, Share2, RefreshCcw } from "lucide-react";
 
 type Q = { type: "mcq" | "predict"; question: string; options: string[]; answerIndex: number; explanation: string };
 type Quiz = { topic: string; questions: Q[] };
@@ -103,6 +103,125 @@ function QuizPage() {
   }
 
   function restart() { setAnswers([]); setStep(0); setDone(false); setReviewing(false); }
+
+  async function retake() {
+    if (!meta) return;
+    setLoading(true);
+    setQuiz(null);
+    setAnswers([]);
+    setStep(0);
+    setDone(false);
+    setReviewing(false);
+    const { data: sess } = await supabase.auth.getSession();
+    const uid = sess.session?.user.id;
+    // Recompute adaptive difficulty from latest results
+    const { data: recent } = await supabase
+      .from("quiz_results")
+      .select("score,total")
+      .eq("user_id", uid!)
+      .eq("language", meta.language)
+      .order("created_at", { ascending: false })
+      .limit(3);
+    let nextDiff: Difficulty = "medium";
+    if (recent && recent.length > 0) {
+      const avg = recent.reduce((a, r) => a + (r.total > 0 ? r.score / r.total : 0), 0) / recent.length;
+      if (avg >= 0.8) nextDiff = "hard";
+      else if (avg < 0.5) nextDiff = "easy";
+    }
+    setDifficulty(nextDiff);
+    const raw = sessionStorage.getItem("quiz.payload");
+    if (!raw) { setLoading(false); return; }
+    const payload = JSON.parse(raw);
+    try {
+      const res = await fetch("/api/quiz", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${sess.session?.access_token}` },
+        body: JSON.stringify({ code: payload.code, language: payload.language, outputLang: payload.outputLang ?? "en", count: 5, difficulty: nextDiff }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Failed");
+      setQuiz(json);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not generate quiz");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function buildMarkdown(): string {
+    if (!quiz) return "";
+    const sc = quiz.questions.reduce((a, qq, i) => a + (answers[i] === qq.answerIndex ? 1 : 0), 0);
+    const lines: string[] = [];
+    lines.push(`# Quiz review · ${quiz.topic}`);
+    lines.push(`**Score:** ${sc}/${quiz.questions.length} · **Difficulty:** ${difficulty} · **Language:** ${meta?.language ?? ""}`);
+    lines.push("");
+    quiz.questions.forEach((qq, i) => {
+      const mine = answers[i];
+      lines.push(`## Q${i + 1}. ${qq.question}`);
+      qq.options.forEach((opt, j) => {
+        const marks: string[] = [];
+        if (j === qq.answerIndex) marks.push("✅ correct");
+        if (j === mine && j !== qq.answerIndex) marks.push("❌ your pick");
+        if (j === mine && j === qq.answerIndex) marks.push("✅ your pick");
+        lines.push(`- **${String.fromCharCode(65 + j)}.** ${opt}${marks.length ? ` _(${marks.join(", ")})_` : ""}`);
+      });
+      lines.push("");
+      lines.push(`> **Explanation:** ${qq.explanation}`);
+      lines.push("");
+    });
+    return lines.join("\n");
+  }
+
+  function downloadMarkdown() {
+    const md = buildMarkdown();
+    if (!md) return;
+    const blob = new Blob([md], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `quiz-${(quiz?.topic ?? "review").toLowerCase().replace(/\s+/g, "-")}.md`;
+    a.click(); URL.revokeObjectURL(url);
+  }
+
+  function downloadPdf() {
+    const md = buildMarkdown();
+    if (!md) return;
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Quiz review</title>
+<style>body{font:14px/1.6 -apple-system,Segoe UI,Inter,sans-serif;max-width:760px;margin:40px auto;padding:0 20px;color:#0b0b0f}
+h1{font-size:26px;margin:0 0 8px}h2{margin-top:28px;font-size:18px;border-bottom:1px solid #ddd;padding-bottom:6px}
+blockquote{border-left:4px solid #c8ff5a;background:#f7f7f5;padding:8px 12px;margin:6px 0;border-radius:6px}
+ul{padding-left:20px}li{margin:4px 0}code{background:#f3f3f3;padding:1px 4px;border-radius:4px;font-family:JetBrains Mono,monospace;font-size:12.5px}
+@media print{button{display:none}}</style></head><body>
+<button onclick="window.print()" style="position:fixed;top:14px;right:14px;padding:8px 14px;border:2px solid #000;background:#c8ff5a;border-radius:8px;font-weight:700;cursor:pointer">Save as PDF</button>
+<div id="content"></div>
+<script>
+const md = ${JSON.stringify(md)};
+function render(md){
+  return md.split('\\n').map(l=>{
+    if(l.startsWith('# ')) return '<h1>'+l.slice(2)+'</h1>';
+    if(l.startsWith('## ')) return '<h2>'+l.slice(3)+'</h2>';
+    if(l.startsWith('> ')) return '<blockquote>'+l.slice(2).replace(/\\*\\*(.+?)\\*\\*/g,'<b>$1</b>')+'</blockquote>';
+    if(l.startsWith('- ')) return '<li>'+l.slice(2).replace(/\\*\\*(.+?)\\*\\*/g,'<b>$1</b>').replace(/_(.+?)_/g,'<i>$1</i>')+'</li>';
+    if(l.trim()==='') return '<br>';
+    return '<p>'+l.replace(/\\*\\*(.+?)\\*\\*/g,'<b>$1</b>')+'</p>';
+  }).join('').replace(/(<li>.*?<\\/li>)+/g,m=>'<ul>'+m+'</ul>');
+}
+document.getElementById('content').innerHTML = render(md);
+setTimeout(()=>window.print(), 400);
+</script></body></html>`;
+    const w = window.open("", "_blank");
+    if (!w) { toast.error("Popup blocked"); return; }
+    w.document.write(html); w.document.close();
+  }
+
+  async function shareReview() {
+    const md = buildMarkdown();
+    if (!md) return;
+    if (navigator.share) {
+      try { await navigator.share({ title: "My quiz review", text: md.slice(0, 1500) }); return; } catch {}
+    }
+    await navigator.clipboard.writeText(md);
+    toast.success("Review copied to clipboard");
+  }
 
   if (!ready || loading) {
     return (
@@ -235,6 +354,20 @@ function QuizPage() {
                 </div>
               );
             })}
+            <div className="flex flex-wrap gap-2 justify-end pt-2">
+              <button onClick={shareReview} className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border-2 border-foreground bg-card font-bold text-[12.5px]">
+                <Share2 className="h-3.5 w-3.5" /> Share
+              </button>
+              <button onClick={downloadMarkdown} className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border-2 border-foreground bg-card font-bold text-[12.5px]">
+                <Download className="h-3.5 w-3.5" /> Markdown
+              </button>
+              <button onClick={downloadPdf} className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border-2 border-foreground bg-[var(--amber)] font-bold text-[12.5px]">
+                <Download className="h-3.5 w-3.5" /> PDF
+              </button>
+              <button onClick={retake} className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border-2 border-foreground bg-[var(--violet)] font-bold text-[12.5px]">
+                <RefreshCcw className="h-3.5 w-3.5" /> Retake quiz
+              </button>
+            </div>
           </div>
         ) : (
           <div className="mt-8 rounded-2xl border-[2.5px] border-foreground bg-card p-7 shadow-pop-lg text-center">
@@ -245,6 +378,9 @@ function QuizPage() {
             <div className="mt-6 flex flex-wrap gap-2 justify-center">
               <button onClick={() => setReviewing(true)} className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl border-2 border-foreground bg-[var(--sky)] font-bold text-[13px] shadow-pop hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
                 <BookOpen className="h-4 w-4" /> Review answers
+              </button>
+              <button onClick={retake} className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl border-2 border-foreground bg-[var(--violet)] font-bold text-[13px] shadow-pop hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
+                <RefreshCcw className="h-4 w-4" /> Retake (adaptive)
               </button>
               <button onClick={restart} className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl border-2 border-foreground bg-card font-bold text-[13px]">
                 <RotateCcw className="h-4 w-4" /> Retry

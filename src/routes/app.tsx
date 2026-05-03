@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/brand/Logo";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { Loader2, Plus, Trash2, Pencil, LogOut, Languages, Play, FileCode, Save, Copy, Download, Sparkles, Bug, Wand2, ShieldCheck, Bookmark, GraduationCap, BarChart3, Upload } from "lucide-react";
+import { Loader2, Plus, Trash2, Pencil, LogOut, Languages, Play, FileCode, Save, Copy, Download, Sparkles, Bug, Wand2, ShieldCheck, Bookmark, GraduationCap, BarChart3, Upload, Search, ArrowRight, Flame } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ThemeToggle } from "@/components/landing/ThemeToggle";
@@ -80,6 +80,9 @@ function AppPage() {
     return () => obs.disconnect();
   }, []);
   const [items, setItems] = useState<Analysis[]>([]);
+  const [historyQuery, setHistoryQuery] = useState("");
+  const [recentSnippets, setRecentSnippets] = useState<{ id: string; name: string; language: string; code: string; tags: string[] }[]>([]);
+  const [progressSummary, setProgressSummary] = useState<{ total: number; avg: number; current: number } | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [name, setName] = useState("Untitled analysis");
   const [language, setLanguage] = useState("javascript");
@@ -101,6 +104,7 @@ function AppPage() {
       else {
         setReady(true);
         loadList();
+        loadWidgets();
         const pre = sessionStorage.getItem("workspace.preload");
         if (pre) {
           try {
@@ -127,6 +131,35 @@ function AppPage() {
     }
     setItems(data ?? []);
   }
+
+  async function loadWidgets() {
+    const [{ data: snips }, { data: quizzes }] = await Promise.all([
+      supabase.from("snippets").select("id,name,language,code,tags").order("updated_at", { ascending: false }).limit(5),
+      supabase.from("quiz_results").select("score,total,created_at").order("created_at", { ascending: false }).limit(50),
+    ]);
+    setRecentSnippets((snips ?? []) as any);
+    if (quizzes && quizzes.length) {
+      const pct = quizzes.map((r) => (r.total > 0 ? r.score / r.total : 0));
+      const avg = pct.reduce((a, b) => a + b, 0) / pct.length;
+      const days = Array.from(new Set(quizzes.map((r) => new Date(r.created_at).toISOString().slice(0, 10))));
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const set = new Set(days);
+      let current = 0;
+      for (let i = 0; i < 365; i++) {
+        const d = new Date(today.getTime() - i * 86400000).toISOString().slice(0, 10);
+        if (set.has(d)) current += 1;
+        else if (i === 0) continue;
+        else break;
+      }
+      setProgressSummary({ total: quizzes.length, avg, current });
+    } else setProgressSummary({ total: 0, avg: 0, current: 0 });
+  }
+
+  const filteredHistory = useMemo(() => {
+    const q = historyQuery.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter((i) => i.name.toLowerCase().includes(q) || i.language.toLowerCase().includes(q) || (i.code ?? "").toLowerCase().includes(q));
+  }, [items, historyQuery]);
 
   function loadItem(item: Analysis) {
     setActiveId(item.id);
@@ -359,11 +392,15 @@ function AppPage() {
             <Plus className="h-4 w-4" /> New analysis
           </button>
           <div className="text-[11px] uppercase tracking-widest font-mono text-muted-foreground px-1 pt-2">History</div>
+          <div className="flex items-center gap-1.5 px-2 h-8 rounded-lg border-2 border-foreground bg-card">
+            <Search className="h-3.5 w-3.5 text-muted-foreground" />
+            <input value={historyQuery} onChange={(e) => setHistoryQuery(e.target.value)} placeholder="Search history…" className="flex-1 bg-transparent outline-none text-[12px]" />
+          </div>
           {items.length === 0 && (
             <div className="text-xs text-muted-foreground px-1">No analyses yet. Run your first one →</div>
           )}
           <ul className="space-y-1.5">
-            {items.map((it) => {
+            {filteredHistory.map((it) => {
               const active = it.id === activeId;
               return (
                 <li key={it.id}>
@@ -400,6 +437,49 @@ function AppPage() {
               );
             })}
           </ul>
+
+          {/* Widgets */}
+          <div className="text-[11px] uppercase tracking-widest font-mono text-muted-foreground px-1 pt-4">Saved snippets</div>
+          {recentSnippets.length === 0 ? (
+            <div className="text-[11.5px] text-muted-foreground px-1">Save code from the workspace to reuse later.</div>
+          ) : (
+            <ul className="space-y-1.5">
+              {recentSnippets.map((s) => (
+                <li key={s.id}>
+                  <button
+                    onClick={() => { setActiveId(null); setName(s.name); setLanguage(s.language); setCode(s.code); setAiResponse(""); }}
+                    className="w-full text-left rounded-xl border-2 border-foreground p-2.5 bg-card/60 hover:bg-card hover:-translate-y-0.5 hover:shadow-pop transition-all"
+                  >
+                    <div className="text-[12.5px] font-semibold truncate">{s.name}</div>
+                    <div className="text-[10.5px] font-mono text-muted-foreground mt-0.5 inline-flex items-center gap-1.5">
+                      <FileCode className="h-3 w-3" /> {s.language}{s.tags?.length ? ` · ${s.tags.slice(0, 2).join(", ")}` : ""}
+                    </div>
+                  </button>
+                </li>
+              ))}
+              <li><Link to="/snippets" className="text-[11.5px] font-bold inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">All snippets <ArrowRight className="h-3 w-3" /></Link></li>
+            </ul>
+          )}
+
+          <div className="text-[11px] uppercase tracking-widest font-mono text-muted-foreground px-1 pt-4">Learning progress</div>
+          {progressSummary && (
+            <Link to="/progress" className="block rounded-xl border-2 border-foreground bg-card p-3 hover:-translate-y-0.5 hover:shadow-pop transition-all">
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <div className="text-[18px] font-display font-bold">{progressSummary.total}</div>
+                  <div className="text-[9.5px] font-mono uppercase tracking-widest text-muted-foreground">quizzes</div>
+                </div>
+                <div>
+                  <div className="text-[18px] font-display font-bold">{Math.round(progressSummary.avg * 100)}%</div>
+                  <div className="text-[9.5px] font-mono uppercase tracking-widest text-muted-foreground">avg</div>
+                </div>
+                <div>
+                  <div className="text-[18px] font-display font-bold inline-flex items-center gap-1"><Flame className="h-3.5 w-3.5" />{progressSummary.current}</div>
+                  <div className="text-[9.5px] font-mono uppercase tracking-widest text-muted-foreground">streak</div>
+                </div>
+              </div>
+            </Link>
+          )}
         </aside>
 
         {/* Main */}

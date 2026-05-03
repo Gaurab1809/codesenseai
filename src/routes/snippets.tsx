@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/brand/Logo";
 import { Toaster } from "@/components/ui/sonner";
@@ -17,9 +17,28 @@ function SnippetsPage() {
   const navigate = useNavigate();
   const [ready, setReady] = useState(false);
   const [items, setItems] = useState<Snippet[]>([]);
-  const [query, setQuery] = useState("");
-  const [activeLang, setActiveLang] = useState<string>("all");
-  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [query, setQuery] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return localStorage.getItem("snippets.query") ?? "";
+  });
+  const [activeLang, setActiveLang] = useState<string>(() => {
+    if (typeof window === "undefined") return "all";
+    return localStorage.getItem("snippets.lang") ?? "all";
+  });
+  const [activeTag, setActiveTag] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem("snippets.tag");
+  });
+  const [editingTagsFor, setEditingTagsFor] = useState<string | null>(null);
+
+  useEffect(() => { try { localStorage.setItem("snippets.query", query); } catch {} }, [query]);
+  useEffect(() => { try { localStorage.setItem("snippets.lang", activeLang); } catch {} }, [activeLang]);
+  useEffect(() => {
+    try {
+      if (activeTag) localStorage.setItem("snippets.tag", activeTag);
+      else localStorage.removeItem("snippets.tag");
+    } catch {}
+  }, [activeTag]);
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => { if (!session) navigate({ to: "/auth" }); });
@@ -43,10 +62,8 @@ function SnippetsPage() {
     navigate({ to: "/app" });
   }
 
-  async function addTag(s: Snippet) {
-    const raw = prompt("Add tags (comma separated)", "");
-    if (!raw) return;
-    const next = Array.from(new Set([...(s.tags ?? []), ...raw.split(",").map((t) => t.trim()).filter(Boolean)]));
+  async function addTags(s: Snippet, raw: string) {
+    const next = Array.from(new Set([...(s.tags ?? []), ...raw.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean)]));
     const { error } = await supabase.from("snippets").update({ tags: next }).eq("id", s.id);
     if (error) toast.error(error.message);
     else setItems((p) => p.map((x) => (x.id === s.id ? { ...x, tags: next } : x)));
@@ -156,9 +173,18 @@ function SnippetsPage() {
                       <button onClick={() => removeTag(s, t)} aria-label="Remove tag" className="hover:text-[var(--coral)]"><X className="h-2.5 w-2.5" /></button>
                     </span>
                   ))}
-                  <button onClick={() => addTag(s)} className="inline-flex items-center gap-1 text-[10.5px] font-bold px-1.5 py-0.5 rounded border border-dashed border-foreground/60 hover:bg-subtle">
-                    <Plus className="h-2.5 w-2.5" /> tag
-                  </button>
+                  {editingTagsFor === s.id ? (
+                    <TagEditor
+                      existing={s.tags ?? []}
+                      suggestions={allTags}
+                      onSubmit={(v) => { addTags(s, v); }}
+                      onClose={() => setEditingTagsFor(null)}
+                    />
+                  ) : (
+                    <button onClick={() => setEditingTagsFor(s.id)} className="inline-flex items-center gap-1 text-[10.5px] font-bold px-1.5 py-0.5 rounded border border-dashed border-foreground/60 hover:bg-subtle">
+                      <Plus className="h-2.5 w-2.5" /> tag
+                    </button>
+                  )}
                 </div>
                 <pre className="mt-3 max-h-32 overflow-hidden text-[11.5px] leading-5 font-mono p-2 rounded-lg bg-subtle border border-foreground/15">{s.code.split("\n").slice(0, 8).join("\n")}</pre>
                 <button onClick={() => openInWorkspace(s)} className="mt-3 w-full h-9 rounded-xl border-2 border-foreground bg-[var(--lime)] font-bold text-[12.5px] inline-flex items-center justify-center gap-1.5">
@@ -170,5 +196,49 @@ function SnippetsPage() {
         )}
       </main>
     </div>
+  );
+}
+
+function TagEditor({ existing, suggestions, onSubmit, onClose }: { existing: string[]; suggestions: string[]; onSubmit: (v: string) => void; onClose: () => void }) {
+  const [v, setV] = useState("");
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => { ref.current?.focus(); }, []);
+  const filtered = useMemo(() => {
+    const q = v.trim().toLowerCase();
+    return suggestions.filter((t) => !existing.includes(t) && (q === "" || t.includes(q))).slice(0, 6);
+  }, [v, suggestions, existing]);
+  function commit(val: string) {
+    if (val.trim()) onSubmit(val.trim());
+    setV("");
+    onClose();
+  }
+  return (
+    <span className="relative inline-flex items-center gap-1">
+      <input
+        ref={ref}
+        value={v}
+        onChange={(e) => setV(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") { e.preventDefault(); commit(v); }
+          if (e.key === "Escape") onClose();
+        }}
+        onBlur={() => setTimeout(onClose, 150)}
+        placeholder="add tag…"
+        className="h-5 w-24 px-1.5 text-[10.5px] rounded border border-foreground bg-background outline-none"
+      />
+      {filtered.length > 0 && (
+        <span className="absolute top-full left-0 mt-1 z-10 flex flex-wrap gap-1 p-1.5 rounded-lg border-2 border-foreground bg-card shadow-pop min-w-[140px]">
+          {filtered.map((t) => (
+            <button
+              key={t}
+              onMouseDown={(e) => { e.preventDefault(); commit(t); }}
+              className="text-[10.5px] font-bold px-1.5 py-0.5 rounded border border-foreground bg-subtle hover:bg-[var(--lime)]"
+            >
+              {t}
+            </button>
+          ))}
+        </span>
+      )}
+    </span>
   );
 }
