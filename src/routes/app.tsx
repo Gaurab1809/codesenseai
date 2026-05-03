@@ -345,19 +345,19 @@ function AppPage() {
       <Toaster />
       {/* Topbar */}
       <header className="sticky top-0 z-30 border-b-2 border-foreground bg-card">
-        <div className="px-4 h-14 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Link to="/"><Logo /></Link>
+        <div className="px-3 sm:px-4 h-14 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <Link to="/" className="shrink-0"><Logo /></Link>
             <span className="hidden md:inline text-xs font-mono px-2 py-0.5 rounded bg-foreground text-background">/workspace</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Link to="/snippets" className="hidden md:inline-flex h-9 px-3 rounded-xl border-2 border-foreground bg-card hover:bg-subtle text-[13px] font-semibold items-center gap-1.5">
-              <Bookmark className="h-3.5 w-3.5" /> Snippets
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <Link to="/snippets" aria-label="Snippets" title="Snippets" className="h-9 w-9 sm:w-auto sm:px-3 rounded-xl border-2 border-foreground bg-card hover:bg-subtle text-[13px] font-semibold inline-flex items-center justify-center gap-1.5">
+              <Bookmark className="h-3.5 w-3.5" /><span className="hidden sm:inline">Snippets</span>
             </Link>
-            <Link to="/progress" className="hidden md:inline-flex h-9 px-3 rounded-xl border-2 border-foreground bg-card hover:bg-subtle text-[13px] font-semibold items-center gap-1.5">
-              <BarChart3 className="h-3.5 w-3.5" /> Progress
+            <Link to="/progress" aria-label="Progress" title="Progress" className="h-9 w-9 sm:w-auto sm:px-3 rounded-xl border-2 border-foreground bg-card hover:bg-subtle text-[13px] font-semibold inline-flex items-center justify-center gap-1.5">
+              <BarChart3 className="h-3.5 w-3.5" /><span className="hidden sm:inline">Progress</span>
             </Link>
-            <div className="flex items-center gap-1 p-1 rounded-xl border-2 border-foreground bg-background">
+            <div className="hidden sm:flex items-center gap-1 p-1 rounded-xl border-2 border-foreground bg-background">
               <Languages className="h-3.5 w-3.5 ml-1.5 text-muted-foreground" />
               {(["en", "bn"] as const).map((l) => (
                 <button
@@ -371,13 +371,15 @@ function AppPage() {
                 </button>
               ))}
             </div>
+            <ThemeToggle />
             <button
               onClick={signOut}
-              className="h-9 px-3 rounded-xl border-2 border-foreground bg-card hover:bg-subtle transition-colors text-[13px] font-semibold inline-flex items-center gap-1.5"
+              aria-label="Sign out"
+              title="Sign out"
+              className="h-9 w-9 sm:w-auto sm:px-3 rounded-xl border-2 border-foreground bg-card hover:bg-subtle transition-colors text-[13px] font-semibold inline-flex items-center justify-center gap-1.5"
             >
-              <LogOut className="h-3.5 w-3.5" /> Sign out
+              <LogOut className="h-3.5 w-3.5" /><span className="hidden sm:inline">Sign out</span>
             </button>
-            <ThemeToggle />
           </div>
         </div>
       </header>
@@ -483,45 +485,57 @@ function AppPage() {
         </aside>
 
         {/* Main */}
-        <main className="p-4 lg:p-6 space-y-4">
+        <main className="p-3 sm:p-4 lg:p-6 space-y-4">
+          {/* Title row */}
           <div className="flex flex-wrap items-center gap-2">
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="flex-1 min-w-[200px] h-10 px-3 rounded-xl border-2 border-foreground bg-card font-semibold outline-none focus:shadow-pop transition-shadow"
+              placeholder="Untitled analysis"
+              className="flex-1 min-w-[180px] h-10 px-3 rounded-xl border-2 border-foreground bg-card text-foreground font-semibold outline-none focus:shadow-pop transition-shadow"
             />
             <select
               value={language}
               onChange={(e) => loadStarter(e.target.value)}
-              className="h-10 px-3 rounded-xl border-2 border-foreground bg-card font-mono text-[13px] outline-none"
+              className="h-10 px-3 rounded-xl border-2 border-foreground bg-card text-foreground font-mono text-[13px] outline-none"
             >
               {LANGS.map((l) => <option key={l} value={l}>{l}</option>)}
             </select>
-            <button onClick={() => fileRef.current?.click()} className="h-10 px-3 rounded-xl border-2 border-foreground bg-card hover:bg-subtle text-[13px] font-semibold inline-flex items-center gap-1.5">
-              <Upload className="h-3.5 w-3.5" /> Upload
-            </button>
-            <input ref={fileRef} type="file" hidden accept=".py,.js,.ts,.java,.c,.cpp,.go,.rs,.rb,.php,.html,.css,.sql,.txt" onChange={onUpload} />
-            <button onClick={saveAsSnippet} className="h-10 px-3 rounded-xl border-2 border-foreground bg-card hover:bg-subtle text-[13px] font-semibold inline-flex items-center gap-1.5">
-              <Bookmark className="h-3.5 w-3.5" /> Snippet
-            </button>
-            <button
-              onClick={() => saveCurrent()}
-              disabled={saving}
-              className="h-10 px-3.5 rounded-xl border-2 border-foreground bg-card hover:bg-subtle font-semibold text-[13px] inline-flex items-center gap-1.5"
-            >
-              <Save className="h-3.5 w-3.5" /> {saving ? "Saving…" : "Save"}
-            </button>
-            <button onClick={startQuiz} className="h-10 px-3.5 rounded-xl border-2 border-foreground bg-[var(--violet)] font-bold text-[13px] shadow-pop hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all inline-flex items-center gap-1.5">
-              <GraduationCap className="h-4 w-4" /> Quiz me
-            </button>
-            <button
-              onClick={analyze}
-              disabled={analyzing}
-              className="h-10 px-4 rounded-xl border-2 border-foreground bg-[var(--coral)] font-bold text-[13px] shadow-pop hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all inline-flex items-center gap-1.5 disabled:opacity-60"
-            >
-              {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-              {analyzing ? "Analyzing…" : "Analyze"}
-            </button>
+          </div>
+
+          {/* Action toolbar: secondary on left, primary CTAs on right */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <button onClick={() => fileRef.current?.click()} aria-label="Upload file" title="Upload file" className="h-9 px-3 rounded-xl border-2 border-foreground bg-card text-foreground hover:bg-subtle text-[12.5px] font-semibold inline-flex items-center gap-1.5">
+                <Upload className="h-3.5 w-3.5" /><span className="hidden sm:inline">Upload</span>
+              </button>
+              <input ref={fileRef} type="file" hidden accept=".py,.js,.ts,.java,.c,.cpp,.go,.rs,.rb,.php,.html,.css,.sql,.txt" onChange={onUpload} />
+              <button onClick={saveAsSnippet} aria-label="Save as snippet" title="Save as snippet" className="h-9 px-3 rounded-xl border-2 border-foreground bg-card text-foreground hover:bg-subtle text-[12.5px] font-semibold inline-flex items-center gap-1.5">
+                <Bookmark className="h-3.5 w-3.5" /><span className="hidden sm:inline">Snippet</span>
+              </button>
+              <button
+                onClick={() => saveCurrent()}
+                disabled={saving}
+                aria-label="Save analysis"
+                title="Save analysis"
+                className="h-9 px-3 rounded-xl border-2 border-foreground bg-card text-foreground hover:bg-subtle font-semibold text-[12.5px] inline-flex items-center gap-1.5 disabled:opacity-60"
+              >
+                <Save className="h-3.5 w-3.5" /><span className="hidden sm:inline">{saving ? "Saving…" : "Save"}</span>
+              </button>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5 ml-auto">
+              <button onClick={startQuiz} className="h-10 px-3.5 rounded-xl border-2 border-foreground bg-[var(--violet)] text-[oklch(0.18_0.02_270)] font-bold text-[13px] shadow-pop hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all inline-flex items-center gap-1.5">
+                <GraduationCap className="h-4 w-4" /> Quiz me
+              </button>
+              <button
+                onClick={analyze}
+                disabled={analyzing}
+                className="h-10 px-4 rounded-xl border-2 border-foreground bg-[var(--coral)] text-[oklch(0.18_0.02_270)] font-bold text-[13px] shadow-pop hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all inline-flex items-center gap-1.5 disabled:opacity-60"
+              >
+                {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+                {analyzing ? "Analyzing…" : "Analyze"}
+              </button>
+            </div>
           </div>
 
           {/* Mode tabs */}
@@ -536,7 +550,7 @@ function AppPage() {
               <button
                 key={m.id}
                 onClick={() => setMode(m.id)}
-                className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border-2 border-foreground text-[12.5px] font-bold transition-all ${mode === m.id ? "shadow-pop -translate-y-0.5" : "bg-card/60 hover:-translate-y-0.5 hover:shadow-pop"}`}
+                className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border-2 border-foreground text-[12.5px] font-bold transition-all ${mode === m.id ? "shadow-pop -translate-y-0.5 text-[oklch(0.18_0.02_270)]" : "bg-card text-foreground hover:-translate-y-0.5 hover:shadow-pop"}`}
                 style={mode === m.id ? { background: m.color } : undefined}
               >
                 <m.icon className="h-3.5 w-3.5" /> {m.label}
