@@ -2,51 +2,43 @@ import { motion } from "framer-motion";
 import { BookOpen, Bug, Wand2, Languages, Code2, ShieldCheck } from "lucide-react";
 
 const features = [
-  { icon: BookOpen, title: "Code Explanation", desc: "Overall purpose, logic flow, and line-by-line breakdown — in plain language.", accent: "var(--neon-blue)" },
-  { icon: Bug, title: "Bug Detection", desc: "Catch syntax issues, runtime risks, logical errors, and infinite loops.", accent: "var(--neon-violet)" },
-  { icon: Wand2, title: "Optimization Engine", desc: "Better naming, cleaner structure, and faster logic suggestions.", accent: "var(--neon-cyan)" },
-  { icon: Languages, title: "Bangla Learning Mode", desc: "প্রোগ্রামিং কনসেপ্ট সহজ বাংলায় — technical terms stay developer-friendly.", accent: "var(--neon-violet)" },
-  { icon: Code2, title: "Multi-language Support", desc: "Python, JavaScript, Java, C++, C, C#, Go, PHP — one workspace.", accent: "var(--neon-blue)" },
-  { icon: ShieldCheck, title: "Security Analysis", desc: "Spot unsafe input handling, hardcoded secrets, and injection risks.", accent: "var(--neon-cyan)" },
+  { icon: BookOpen, title: "Code Explanation", desc: "Overall purpose, logic flow, and a clean line-by-line breakdown." },
+  { icon: Bug, title: "Bug Detection", desc: "Catches syntax issues, runtime risks, logical errors, and infinite loops." },
+  { icon: Wand2, title: "Optimization", desc: "Better naming, cleaner structure, and faster algorithms." },
+  { icon: Languages, title: "Bangla Mode", desc: "প্রোগ্রামিং কনসেপ্ট সহজ বাংলায় — technical terms stay native." },
+  { icon: Code2, title: "8 Languages", desc: "Python, JavaScript, TypeScript, Java, C++, C, C#, Go, PHP." },
+  { icon: ShieldCheck, title: "Security Scan", desc: "Spot unsafe input handling, hardcoded secrets, and injection risks." },
 ];
 
 export function Features() {
   return (
-    <section id="features" className="relative py-28">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+    <section id="features" className="relative py-28 border-t border-border">
+      <div className="mx-auto max-w-6xl px-5 sm:px-6">
         <div className="max-w-2xl">
-          <div className="text-xs font-mono uppercase tracking-widest text-[var(--neon-cyan)]">Capabilities</div>
-          <h2 className="mt-3 text-3xl sm:text-5xl font-bold tracking-tight">
-            Everything an AI mentor should do — <span className="text-gradient">at a senior level</span>
+          <div className="text-[12px] font-medium text-primary">Capabilities</div>
+          <h2 className="mt-2 text-3xl sm:text-4xl font-semibold tracking-tight">
+            Everything an AI mentor should do.
           </h2>
-          <p className="mt-4 text-muted-foreground">
-            Six tightly integrated systems work together to explain, debug, optimize, and teach.
+          <p className="mt-3 text-muted-foreground text-pretty">
+            Six tightly integrated systems that work together to explain, debug, optimize, and teach.
           </p>
         </div>
 
-        <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border rounded-xl overflow-hidden border border-border">
           {features.map((f, i) => (
             <motion.div
               key={f.title}
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.5, delay: i * 0.05 }}
-              whileHover={{ y: -6 }}
-              className="group relative glass rounded-2xl p-6 shadow-card overflow-hidden"
+              transition={{ duration: 0.45, delay: i * 0.04 }}
+              className="group bg-card p-7 hover:bg-subtle transition-colors"
             >
-              <div
-                className="absolute -top-16 -right-16 w-40 h-40 rounded-full opacity-0 group-hover:opacity-60 transition-opacity duration-500 blur-2xl"
-                style={{ background: `radial-gradient(circle, ${f.accent}, transparent 70%)` }}
-              />
-              <div
-                className="inline-flex h-11 w-11 items-center justify-center rounded-xl border"
-                style={{ borderColor: `${f.accent}`, color: f.accent, background: `color-mix(in oklab, ${f.accent} 12%, transparent)` }}
-              >
-                <f.icon className="h-5 w-5" />
+              <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-foreground/80 group-hover:border-primary/30 group-hover:text-primary transition-colors">
+                <f.icon className="h-4 w-4" />
               </div>
-              <h3 className="mt-5 text-lg font-semibold">{f.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{f.desc}</p>
+              <h3 className="mt-5 text-[15px] font-semibold">{f.title}</h3>
+              <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">{f.desc}</p>
             </motion.div>
           ))}
         </div>
