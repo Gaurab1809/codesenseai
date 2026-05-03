@@ -4,9 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/brand/Logo";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { Loader2, Plus, Trash2, Pencil, LogOut, Languages, Play, FileCode, Save, Copy, Download, Sparkles } from "lucide-react";
+import { Loader2, Plus, Trash2, Pencil, LogOut, Languages, Play, FileCode, Save, Copy, Download, Sparkles, Bug, Wand2, ShieldCheck, Bookmark, GraduationCap, BarChart3, Upload } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import Editor from "@monaco-editor/react";
+import { useRef } from "react";
 
 type Analysis = {
   id: string;
@@ -67,6 +69,9 @@ function AppPage() {
   const [aiResponse, setAiResponse] = useState<string>("");
   const [analyzing, setAnalyzing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [mode, setMode] = useState<"explain" | "bugs" | "optimize" | "security" | "bangla">("explain");
+  const fileRef = useRef<HTMLInputElement>(null);
+  const navigate2 = useNavigate();
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
@@ -159,7 +164,7 @@ function AppPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ code, language, outputLang }),
+        body: JSON.stringify({ code, language, outputLang, mode }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -219,6 +224,37 @@ function AppPage() {
     }
   }
 
+  function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+    const map: Record<string, string> = { py: "python", js: "javascript", ts: "typescript", java: "java", cpp: "cpp", c: "c", go: "go", rs: "rust", rb: "ruby", php: "php", html: "html", css: "css", sql: "sql" };
+    const detected = map[ext] ?? language;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCode(String(reader.result ?? ""));
+      setLanguage(detected);
+      if (!name || name === "Untitled analysis") setName(file.name);
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  }
+
+  async function saveAsSnippet() {
+    const { data: sess } = await supabase.auth.getSession();
+    const uid = sess.session?.user.id;
+    if (!uid) return;
+    const { error } = await supabase.from("snippets").insert({ user_id: uid, name, language, code });
+    if (error) toast.error(error.message);
+    else toast.success("Saved to snippets");
+  }
+
+  async function startQuiz() {
+    if (!code.trim()) { toast.error("Add some code first."); return; }
+    sessionStorage.setItem("quiz.payload", JSON.stringify({ code, language, outputLang, name, analysisId: activeId }));
+    navigate2({ to: "/quiz" });
+  }
+
   function copyResponse() {
     if (!aiResponse) return;
     navigator.clipboard.writeText(aiResponse);
@@ -253,6 +289,12 @@ function AppPage() {
             <span className="hidden md:inline text-xs font-mono px-2 py-0.5 rounded bg-foreground text-background">/workspace</span>
           </div>
           <div className="flex items-center gap-2">
+            <Link to="/snippets" className="hidden md:inline-flex h-9 px-3 rounded-xl border-2 border-foreground bg-card hover:bg-subtle text-[13px] font-semibold items-center gap-1.5">
+              <Bookmark className="h-3.5 w-3.5" /> Snippets
+            </Link>
+            <Link to="/progress" className="hidden md:inline-flex h-9 px-3 rounded-xl border-2 border-foreground bg-card hover:bg-subtle text-[13px] font-semibold items-center gap-1.5">
+              <BarChart3 className="h-3.5 w-3.5" /> Progress
+            </Link>
             <div className="flex items-center gap-1 p-1 rounded-xl border-2 border-foreground bg-background">
               <Languages className="h-3.5 w-3.5 ml-1.5 text-muted-foreground" />
               {(["en", "bn"] as const).map((l) => (
@@ -345,12 +387,22 @@ function AppPage() {
             >
               {LANGS.map((l) => <option key={l} value={l}>{l}</option>)}
             </select>
+            <button onClick={() => fileRef.current?.click()} className="h-10 px-3 rounded-xl border-2 border-foreground bg-card hover:bg-subtle text-[13px] font-semibold inline-flex items-center gap-1.5">
+              <Upload className="h-3.5 w-3.5" /> Upload
+            </button>
+            <input ref={fileRef} type="file" hidden accept=".py,.js,.ts,.java,.c,.cpp,.go,.rs,.rb,.php,.html,.css,.sql,.txt" onChange={onUpload} />
+            <button onClick={saveAsSnippet} className="h-10 px-3 rounded-xl border-2 border-foreground bg-card hover:bg-subtle text-[13px] font-semibold inline-flex items-center gap-1.5">
+              <Bookmark className="h-3.5 w-3.5" /> Snippet
+            </button>
             <button
               onClick={() => saveCurrent()}
               disabled={saving}
               className="h-10 px-3.5 rounded-xl border-2 border-foreground bg-card hover:bg-subtle font-semibold text-[13px] inline-flex items-center gap-1.5"
             >
               <Save className="h-3.5 w-3.5" /> {saving ? "Saving…" : "Save"}
+            </button>
+            <button onClick={startQuiz} className="h-10 px-3.5 rounded-xl border-2 border-foreground bg-[var(--violet)] font-bold text-[13px] shadow-pop hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all inline-flex items-center gap-1.5">
+              <GraduationCap className="h-4 w-4" /> Quiz me
             </button>
             <button
               onClick={analyze}
@@ -360,6 +412,26 @@ function AppPage() {
               {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
               {analyzing ? "Analyzing…" : "Analyze"}
             </button>
+          </div>
+
+          {/* Mode tabs */}
+          <div className="flex flex-wrap gap-1.5">
+            {([
+              { id: "explain", label: "Explain", icon: Sparkles, color: "var(--lime)" },
+              { id: "bugs", label: "Bugs", icon: Bug, color: "var(--coral)" },
+              { id: "optimize", label: "Optimize", icon: Wand2, color: "var(--sky)" },
+              { id: "security", label: "Security", icon: ShieldCheck, color: "var(--amber)" },
+              { id: "bangla", label: "বাংলা", icon: Languages, color: "var(--violet)" },
+            ] as const).map((m) => (
+              <button
+                key={m.id}
+                onClick={() => setMode(m.id)}
+                className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border-2 border-foreground text-[12.5px] font-bold transition-all ${mode === m.id ? "shadow-pop -translate-y-0.5" : "bg-card/60 hover:-translate-y-0.5 hover:shadow-pop"}`}
+                style={mode === m.id ? { background: m.color } : undefined}
+              >
+                <m.icon className="h-3.5 w-3.5" /> {m.label}
+              </button>
+            ))}
           </div>
 
           <div className="grid lg:grid-cols-2 gap-4">
@@ -374,13 +446,25 @@ function AppPage() {
                 <div className="font-mono text-[11px] font-bold opacity-80">{language} · {lineCount} lines</div>
                 <span className="font-mono text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-foreground text-background">editor</span>
               </div>
-              <textarea
+              <Editor
+                height="480px"
+                language={monacoLang(language)}
                 value={code}
-                onChange={(e) => setCode(e.target.value)}
-                onKeyDown={onEditorKeyDown}
-                spellCheck={false}
-                className="w-full h-[480px] p-4 bg-transparent font-mono text-[13px] leading-6 outline-none resize-none"
-                placeholder="Paste your code here…"
+                theme="vs-dark"
+                onChange={(v) => setCode(v ?? "")}
+                onMount={(editor, monaco) => {
+                  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => analyze());
+                }}
+                options={{
+                  fontFamily: "JetBrains Mono, ui-monospace, monospace",
+                  fontSize: 13,
+                  minimap: { enabled: false },
+                  smoothScrolling: true,
+                  scrollBeyondLastLine: false,
+                  padding: { top: 14 },
+                  cursorBlinking: "smooth",
+                  renderLineHighlight: "all",
+                }}
               />
             </div>
 
