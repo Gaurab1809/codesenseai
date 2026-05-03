@@ -20,7 +20,7 @@ export function Navbar() {
         <nav className="hidden md:flex items-center gap-1 text-[13px]">
           {[
             ["Features", "#features"],
-            ["Playground", "#playground"],
+            ["Themes", "#themes"],
             ["Pricing", "#pricing"],
             ["FAQ", "#faq"],
           ].map(([l, h]) => (
