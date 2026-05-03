@@ -29,11 +29,13 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "CodeSense AI – AI Code Explainer for Beginners" },
+      { name: "description", content: "Paste your code and instantly get AI-powered explanations, bug detection, optimization suggestions, and Bangla learning support." },
+      { name: "keywords", content: "AI Code Explainer, Programming Learning, Debugger, Code Review, Bangla Programming, AI Developer Tools" },
+      { name: "author", content: "CodeSense AI" },
+      { name: "theme-color", content: "#0b0f1f" },
+      { property: "og:title", content: "CodeSense AI – Understand Code. Fix Bugs. Learn Faster." },
+      { property: "og:description", content: "AI-powered code explanations, bug detection, and Bangla learning support for beginner developers." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
@@ -43,6 +45,9 @@ export const Route = createRootRoute({
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" },
     ],
   }),
   shellComponent: RootShell,
@@ -52,7 +57,7 @@ export const Route = createRootRoute({
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <head>
         <HeadContent />
       </head>
