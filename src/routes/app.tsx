@@ -69,6 +69,8 @@ export const Route = createFileRoute("/app")({
 function AppPage() {
   const navigate = useNavigate();
   const [ready, setReady] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const [isDark, setIsDark] = useState(false);
   useEffect(() => {
     const update = () => setIsDark(document.documentElement.classList.contains("dark"));
@@ -474,6 +476,7 @@ function AppPage() {
                 <div className="font-mono text-[11px] font-bold opacity-80">{language} · {lineCount} lines</div>
                 <span className="font-mono text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-foreground text-background">editor</span>
               </div>
+              {mounted ? (
               <Suspense fallback={<div className="h-[480px] grid place-items-center text-xs text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /></div>}>
                 <Editor
                   height="480px"
@@ -497,6 +500,9 @@ function AppPage() {
                   }}
                 />
               </Suspense>
+              ) : (
+                <div className="h-[480px] grid place-items-center text-xs text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /></div>
+              )}
             </div>
 
             {/* AI response */}
