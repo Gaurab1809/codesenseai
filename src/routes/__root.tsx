@@ -34,11 +34,15 @@ export const Route = createRootRoute({
       { name: "keywords", content: "AI Code Explainer, Programming Learning, Debugger, Code Review, Bangla Programming, AI Developer Tools" },
       { name: "author", content: "CodeSense AI" },
       { name: "theme-color", content: "#ffffff" },
-      { property: "og:title", content: "CodeSense AI – Understand Code. Fix Bugs. Learn Faster." },
-      { property: "og:description", content: "AI-powered code explanations, bug detection, and Bangla learning support for beginner developers." },
+      { property: "og:title", content: "CodeSense AI – AI Code Explainer for Beginners" },
+      { property: "og:description", content: "Paste your code and instantly get AI-powered explanations, bug detection, optimization suggestions, and Bangla learning support." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "CodeSense AI – AI Code Explainer for Beginners" },
+      { name: "twitter:description", content: "Paste your code and instantly get AI-powered explanations, bug detection, optimization suggestions, and Bangla learning support." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/2bd241c1-01ef-48e6-ac0d-c411a4392afa" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/2bd241c1-01ef-48e6-ac0d-c411a4392afa" },
     ],
     links: [
       {
