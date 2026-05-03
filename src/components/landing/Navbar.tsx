@@ -1,8 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { Logo } from "@/components/brand/Logo";
-import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "./ThemeToggle";
+import { Magnetic } from "@/components/fx/Magnetic";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -14,24 +14,33 @@ export function Navbar() {
   }, []);
 
   return (
-    <header className={`fixed top-0 inset-x-0 z-50 transition-all ${scrolled ? "border-b border-border/80 bg-background/80 backdrop-blur-xl" : "border-b border-transparent"}`}>
-      <div className="mx-auto max-w-6xl px-5 sm:px-6 h-14 flex items-center justify-between">
-        <div className="flex items-center gap-8">
-          <Link to="/"><Logo /></Link>
-          <nav className="hidden md:flex items-center gap-6 text-[13px] text-muted-foreground">
-            <a href="#features" className="hover:text-foreground transition-colors">Features</a>
-            <a href="#playground" className="hover:text-foreground transition-colors">Playground</a>
-            <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
-            <a href="#changelog" className="hover:text-foreground transition-colors">Changelog</a>
-            <a href="#docs" className="hover:text-foreground transition-colors">Docs</a>
-          </nav>
-        </div>
-        <div className="flex items-center gap-1.5">
+    <header className="fixed top-3 inset-x-3 z-50">
+      <div className={`mx-auto max-w-6xl rounded-2xl border-2 border-foreground bg-card px-4 sm:px-5 h-14 flex items-center justify-between transition-shadow ${scrolled ? "shadow-pop" : ""}`}>
+        <Link to="/" data-cursor="hover"><Logo /></Link>
+        <nav className="hidden md:flex items-center gap-1 text-[13px]">
+          {[
+            ["Features", "#features"],
+            ["Playground", "#playground"],
+            ["Pricing", "#pricing"],
+            ["FAQ", "#faq"],
+          ].map(([l, h]) => (
+            <a key={l} href={h} data-cursor="hover" className="px-3 py-1.5 rounded-lg hover:bg-subtle transition-colors">
+              {l}
+            </a>
+          ))}
+        </nav>
+        <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Button variant="ghost" size="sm" className="text-[13px]">Sign in</Button>
-          <Button size="sm" className="text-[13px] h-8 px-3 rounded-md">
-            Try free →
-          </Button>
+          <Magnetic strength={6}>
+            <a
+              href="#start"
+              data-cursor="hover"
+              data-cursor-label="go!"
+              className="inline-flex items-center h-9 px-3.5 rounded-xl bg-[var(--coral)] border-2 border-foreground text-foreground font-semibold text-[13px] shadow-pop hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all"
+            >
+              Try Free →
+            </a>
+          </Magnetic>
         </div>
       </div>
     </header>

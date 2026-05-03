@@ -1,42 +1,37 @@
-import { motion } from "framer-motion";
+import { Tilt } from "@/components/fx/Tilt";
 
 const items = [
-  { name: "Ayesha R.", role: "CSE Student, BUET", quote: "The Bangla mode finally made recursion click. Like having a senior who actually has time." },
-  { name: "Marcus L.", role: "Bootcamp grad", quote: "I paste, I learn. The line-by-line breakdowns beat half my course videos." },
-  { name: "Tanvir H.", role: "Junior dev", quote: "Caught an off-by-one in my prod PR. Saved me a real bad Monday." },
+  { name: "Ayesha R.", role: "CSE, BUET", quote: "বাংলা mode finally made recursion click. Felt like a senior who actually had time.", c: "var(--lime)" },
+  { name: "Marcus L.", role: "Bootcamp grad", quote: "I paste, I learn. The line-by-line beats half my course videos.", c: "var(--sky)" },
+  { name: "Tanvir H.", role: "Junior dev", quote: "Caught an off-by-one in my prod PR. Saved my Monday.", c: "var(--coral)" },
 ];
 
 export function Testimonials() {
   return (
-    <section className="relative py-24 border-t border-border">
+    <section className="relative py-24 bg-subtle border-y-2 border-foreground">
       <div className="mx-auto max-w-6xl px-5 sm:px-6">
         <div className="max-w-2xl">
-          <div className="text-[12px] font-medium text-primary">Loved by learners</div>
-          <h2 className="mt-2 text-3xl sm:text-4xl font-semibold tracking-tight">
-            From first "aha" to first job.
+          <span className="font-mono text-[12px] uppercase tracking-widest px-2 py-1 bg-foreground text-background rounded">/loved</span>
+          <h2 className="mt-4 text-4xl sm:text-5xl font-display font-bold tracking-tight">
+            People won't shut up about it.
           </h2>
         </div>
         <div className="mt-10 grid md:grid-cols-3 gap-5">
           {items.map((t, i) => (
-            <motion.figure
-              key={t.name}
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08, duration: 0.45 }}
-              className="rounded-xl border border-border bg-card p-6"
-            >
-              <blockquote className="text-[14px] leading-relaxed text-foreground/90">"{t.quote}"</blockquote>
-              <figcaption className="mt-5 flex items-center gap-3">
-                <div className="h-8 w-8 rounded-full bg-foreground text-background grid place-items-center text-[11px] font-semibold">
-                  {t.name[0]}
-                </div>
-                <div>
-                  <div className="text-[13px] font-medium">{t.name}</div>
-                  <div className="text-[12px] text-muted-foreground">{t.role}</div>
-                </div>
-              </figcaption>
-            </motion.figure>
+            <Tilt key={t.name}>
+              <figure className="sticker p-6 h-full" style={{ transform: `rotate(${(i - 1) * 1.2}deg)` }}>
+                <blockquote className="text-[15px] leading-relaxed font-medium">"{t.quote}"</blockquote>
+                <figcaption className="mt-5 flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl border-2 border-foreground grid place-items-center font-bold" style={{ background: t.c }}>
+                    {t.name[0]}
+                  </div>
+                  <div>
+                    <div className="text-[13px] font-bold">{t.name}</div>
+                    <div className="text-[11.5px] text-muted-foreground">{t.role}</div>
+                  </div>
+                </figcaption>
+              </figure>
+            </Tilt>
           ))}
         </div>
       </div>

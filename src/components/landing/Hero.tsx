@@ -1,167 +1,193 @@
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Bug, Sparkles, Zap, Code2, Languages } from "lucide-react";
+import { ParallaxScene } from "@/components/fx/Parallax";
+import { Magnetic } from "@/components/fx/Magnetic";
 
 export function Hero() {
   return (
-    <section className="relative pt-32 pb-20 overflow-hidden">
-      <div className="absolute inset-0 grid-pattern" aria-hidden />
-      <div className="relative mx-auto max-w-6xl px-5 sm:px-6 text-center">
-        <motion.a
-          href="#changelog"
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-[12px] text-muted-foreground hover:bg-subtle transition-colors"
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-          New · Bangla learning mode is live
-          <ArrowRight className="h-3 w-3" />
-        </motion.a>
+    <section className="relative pt-28 pb-16 overflow-hidden">
+      {/* background paper */}
+      <div className="absolute inset-0 dot-paper opacity-50" aria-hidden />
 
-        <motion.h1
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.05 }}
-          className="mt-6 text-balance text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight leading-[1.02] text-gradient"
-        >
-          The AI that explains
-          <br className="hidden sm:block" /> code like a senior dev.
-        </motion.h1>
+      {/* big background blobs that follow the cursor */}
+      <ParallaxScene className="absolute inset-0 pointer-events-none" >
+        <div data-depth="0.6" className="absolute -top-20 -left-16 h-[420px] w-[420px] blob bg-[var(--lime)] opacity-70" />
+        <div data-depth="0.9" className="absolute top-32 -right-20 h-[380px] w-[380px] blob bg-[var(--sky)] opacity-70" style={{ animationDelay: "-3s" }} />
+        <div data-depth="0.4" className="absolute bottom-0 left-1/3 h-[260px] w-[260px] blob bg-[var(--violet)] opacity-60" style={{ animationDelay: "-6s" }} />
+      </ParallaxScene>
 
-        <motion.p
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.15 }}
-          className="mt-5 text-pretty text-[17px] sm:text-lg text-muted-foreground max-w-2xl mx-auto"
-        >
-          Paste any snippet. Get clear explanations, real bug detection, optimization
-          tips, and Bangla learning support — built for beginner programmers.
-        </motion.p>
+      <ParallaxScene className="relative mx-auto max-w-6xl px-5 sm:px-6 grid lg:grid-cols-[1.1fr_1fr] gap-10 items-center">
+        {/* LEFT */}
+        <div className="relative">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center gap-2 rounded-full bg-card border-2 border-foreground px-3 py-1 text-[12px] font-semibold shadow-pop"
+          >
+            <span className="h-2 w-2 rounded-full bg-[var(--coral)]" />
+            New: Bangla learning mode <span className="font-mono">v2</span>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.25 }}
-          className="mt-8 flex flex-wrap items-center justify-center gap-2.5"
-        >
-          <Button size="lg" className="h-10 px-4 rounded-md shadow-glow group">
-            Start for free
-            <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-          </Button>
-          <Button size="lg" variant="outline" className="h-10 px-4 rounded-md">
-            Watch the demo
-          </Button>
-        </motion.div>
-
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-[12px] text-muted-foreground">
-          {["Free forever plan", "No credit card", "8 languages", "বাংলা supported"].map((t) => (
-            <span key={t} className="inline-flex items-center gap-1.5">
-              <Check className="h-3 w-3 text-primary" /> {t}
+          <motion.h1
+            initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+            className="mt-5 text-balance text-5xl sm:text-6xl lg:text-7xl font-display font-bold leading-[0.98] tracking-tight"
+          >
+            Code is fun.{" "}
+            <span className="relative inline-block">
+              <span className="relative z-10">Bugs aren't.</span>
+              <svg viewBox="0 0 200 14" className="absolute -bottom-1 left-0 w-full h-3" preserveAspectRatio="none">
+                <path d="M2 8 Q 50 0 100 6 T 198 4" stroke="var(--coral)" strokeWidth="4" fill="none" strokeLinecap="round" />
+              </svg>
             </span>
-          ))}
-        </div>
+            <br />
+            Let AI <span className="bg-[var(--lime)] px-2 -rotate-1 inline-block border-2 border-foreground rounded-lg">explain</span> your code.
+          </motion.h1>
 
-        {/* Product preview card */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.35 }}
-          className="relative mx-auto mt-16 max-w-5xl"
-        >
-          <div className="absolute -inset-x-12 -top-12 -bottom-12 -z-10 dot-pattern opacity-50" />
-          <div className="rounded-xl border border-border bg-card shadow-elegant overflow-hidden">
-            <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-border bg-subtle">
-              <div className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-border" />
-                <span className="h-2.5 w-2.5 rounded-full bg-border" />
-                <span className="h-2.5 w-2.5 rounded-full bg-border" />
-              </div>
-              <div className="text-[11px] font-mono text-muted-foreground">codesense.app · main.py</div>
-              <div className="text-[11px] text-muted-foreground">⌘K</div>
-            </div>
-            <HeroPreview />
-          </div>
-        </motion.div>
+          <motion.p
+            initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+            className="mt-5 text-[17px] text-pretty text-muted-foreground max-w-xl"
+          >
+            Paste a snippet → get plain-English explanations, bug fixes, optimization tips, and Bangla support. Your friendly AI mentor for learning to code.
+          </motion.p>
 
-        {/* Logo strip */}
-        <div className="mt-16">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-            Trusted by learners at
-          </p>
-          <div className="mt-5 marquee-fade flex items-center justify-center gap-10 text-muted-foreground/60 font-display font-medium text-sm">
-            {["BUET", "MIT OCW", "Stanford CIP", "freeCodeCamp", "Coursera", "Kaggle"].map((n) => (
-              <span key={n} className="whitespace-nowrap">{n}</span>
+          <motion.div
+            initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
+            className="mt-7 flex flex-wrap items-center gap-3"
+          >
+            <Magnetic>
+              <a
+                href="#start"
+                data-cursor="hover"
+                data-cursor-label="let's go"
+                className="inline-flex items-center gap-1.5 h-12 px-5 rounded-2xl bg-[var(--coral)] border-2 border-foreground text-foreground font-bold shadow-pop-lg hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
+              >
+                Start coding free <ArrowRight className="h-4 w-4" />
+              </a>
+            </Magnetic>
+            <Magnetic strength={10}>
+              <a
+                href="#playground"
+                data-cursor="hover"
+                className="inline-flex items-center gap-1.5 h-12 px-5 rounded-2xl bg-card border-2 border-foreground text-foreground font-semibold shadow-pop hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
+              >
+                ▶ Watch demo
+              </a>
+            </Magnetic>
+          </motion.div>
+
+          <div className="mt-6 flex flex-wrap items-center gap-2">
+            {[
+              { l: "Beginner friendly", c: "var(--lime)" },
+              { l: "বাংলা সাপোর্ট", c: "var(--sky)" },
+              { l: "8 languages", c: "var(--amber)" },
+            ].map((b) => (
+              <span key={b.l} className="text-[12px] font-semibold px-2.5 py-1 rounded-full border-2 border-foreground" style={{ background: b.c }}>
+                {b.l}
+              </span>
             ))}
           </div>
         </div>
-      </div>
-    </section>
-  );
-}
 
-function HeroPreview() {
-  const lines = [
-    { n: 1, c: <><span className="text-[oklch(0.55_0.18_300)]">def</span> <span className="text-[oklch(0.45_0.15_240)]">find_duplicates</span>(items):</> },
-    { n: 2, c: <>    seen = []</> },
-    { n: 3, c: <>    duplicates = []</> },
-    { n: 4, c: <>    <span className="text-[oklch(0.55_0.18_300)]">for</span> item <span className="text-[oklch(0.55_0.18_300)]">in</span> items:</> },
-    { n: 5, c: <>        <span className="text-[oklch(0.55_0.18_300)]">if</span> item <span className="text-[oklch(0.55_0.18_300)]">in</span> seen:</> },
-    { n: 6, c: <>            duplicates.append(item)</> },
-    { n: 7, c: <>        seen.append(item)</> },
-    { n: 8, c: <>    <span className="text-[oklch(0.55_0.18_300)]">return</span> duplicates</> },
-  ];
-  return (
-    <div className="grid md:grid-cols-[1.05fr_1fr]">
-      <div className="font-mono text-[12.5px] leading-6 p-5 text-left bg-card">
-        {lines.map((l) => (
-          <motion.div
-            key={l.n}
-            initial={{ opacity: 0, x: -4 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 + l.n * 0.04, duration: 0.3 }}
-            className="grid grid-cols-[1.75rem_1fr]"
-          >
-            <span className="text-muted-foreground/50 select-none">{l.n}</span>
-            <code>{l.c}</code>
-          </motion.div>
-        ))}
-      </div>
-      <div className="border-t md:border-t-0 md:border-l border-border bg-subtle/60 p-5 text-left">
-        <div className="flex items-center gap-2 text-[11px]">
-          {["Explain", "Bugs · 1", "Optimize", "Secure", "বাংলা"].map((t, i) => (
-            <span
-              key={t}
-              className={`px-2 py-1 rounded-md border ${i === 0 ? "border-primary/30 bg-primary/10 text-primary" : "border-transparent text-muted-foreground"}`}
-            >
-              {t}
-            </span>
-          ))}
-        </div>
-        <div className="mt-4">
-          <div className="text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground">Summary</div>
-          <p className="mt-1.5 text-[13.5px] leading-relaxed">
-            Returns items that appear more than once by tracking a <span className="font-mono text-foreground">seen</span> list as it iterates.
-          </p>
-        </div>
-        <div className="mt-4 rounded-lg border border-border bg-card p-3">
-          <div className="flex items-start gap-2">
-            <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-amber-500" />
-            <div>
-              <div className="text-[12.5px] font-medium">Performance · O(n²)</div>
-              <p className="mt-0.5 text-[12px] text-muted-foreground">
-                Use a <span className="font-mono">set</span> instead of a list for O(1) membership checks.
-              </p>
+        {/* RIGHT — playful 3D sticker scene */}
+        <div className="relative h-[520px] lg:h-[560px]" style={{ perspective: 1200 }}>
+          {/* Main editor card */}
+          <div data-depth="0.3" data-rot="2" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[88%]">
+            <div className="sticker-lg p-3.5 bg-card">
+              <div className="flex items-center justify-between mb-2.5">
+                <div className="flex gap-1">
+                  <span className="h-2.5 w-2.5 rounded-full bg-[var(--coral)] border border-foreground" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[var(--amber)] border border-foreground" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[var(--lime)] border border-foreground" />
+                </div>
+                <div className="font-mono text-[10px] text-muted-foreground">main.py</div>
+                <div className="font-mono text-[10px] px-1.5 py-0.5 bg-[var(--lime)] border border-foreground rounded">live</div>
+              </div>
+              <pre className="font-mono text-[12.5px] leading-6 bg-subtle rounded-xl p-3 border-2 border-foreground/10">
+{`def greet(name):
+    return f"hi, {name} 👋"
+
+print(greet("dev"))`}
+              </pre>
+              <div className="mt-2.5 grid grid-cols-3 gap-1.5">
+                {[
+                  ["Explain", "var(--sky)"],
+                  ["Debug", "var(--coral)"],
+                  ["Bangla", "var(--violet)"],
+                ].map(([l, c]) => (
+                  <div key={l} data-cursor="hover" className="text-center text-[11px] font-bold py-1.5 rounded-lg border-2 border-foreground cursor-none" style={{ background: c }}>
+                    {l}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
+
+          {/* Floating sticker cards */}
+          <div data-depth="1.6" data-rot="-4" className="absolute top-2 left-0 sticker p-3 w-44 wobble bg-[var(--lime)]" style={{ animationDelay: "-1s" }}>
+            <div className="flex items-center gap-1.5 text-[11px] font-bold">
+              <Bug className="h-3.5 w-3.5" /> Bug found
+            </div>
+            <div className="mt-1 font-mono text-[11px]">off-by-one · L14</div>
+          </div>
+
+          <div data-depth="1.3" data-rot="3" className="absolute bottom-6 right-0 sticker p-3 w-48 float-y bg-[var(--sky)]">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold">
+              <Zap className="h-3.5 w-3.5" /> Optimized
+            </div>
+            <div className="mt-1 font-mono text-[11px]">O(n²) → O(n)</div>
+          </div>
+
+          <div data-depth="2" data-rot="6" className="absolute top-24 right-2 sticker p-3 w-44 bg-[var(--coral)]" style={{ animationDelay: "-2s" }}>
+            <div className="flex items-center gap-1.5 text-[11px] font-bold">
+              <Sparkles className="h-3.5 w-3.5" /> Explained
+            </div>
+            <div className="mt-1 text-[11px]">Loops 3x and prints!</div>
+          </div>
+
+          <div data-depth="1.8" data-rot="-5" className="absolute bottom-2 left-2 sticker p-3 bg-[var(--violet)]">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold">
+              <Languages className="h-3.5 w-3.5" /> বাংলা
+            </div>
+            <div className="mt-1 text-[11px]">লুপটি ৫ বার চলবে</div>
+          </div>
+
+          {/* Floating syntax stickers */}
+          {[
+            { s: "</>", x: "10%", y: "8%", c: "var(--amber)", d: 2.5, r: -8 },
+            { s: "{ }", x: "82%", y: "14%", c: "var(--lime)", d: 2.2, r: 8 },
+            { s: "=>", x: "4%", y: "62%", c: "var(--sky)", d: 1.8, r: -6 },
+            { s: "[ ]", x: "88%", y: "60%", c: "var(--coral)", d: 2.4, r: 6 },
+            { s: "( )", x: "46%", y: "94%", c: "var(--violet)", d: 1.6, r: 4 },
+          ].map((it, i) => (
+            <div
+              key={i}
+              data-depth={it.d}
+              data-rot={it.r}
+              className="absolute font-mono font-bold text-sm h-10 w-10 grid place-items-center rounded-xl border-2 border-foreground sticker"
+              style={{ left: it.x, top: it.y, background: it.c, animation: `float-y ${4 + i}s ease-in-out infinite`, animationDelay: `-${i}s` }}
+            >
+              {it.s}
+            </div>
+          ))}
+
+          {/* Spinning gear sticker */}
+          <div data-depth="0.8" className="absolute top-4 right-10 spin-slow">
+            <div className="h-12 w-12 rounded-full border-2 border-foreground bg-[var(--amber)] grid place-items-center font-mono text-[10px] font-bold">AI</div>
+          </div>
         </div>
-        <div className="mt-3 rounded-lg border border-border bg-card p-3">
-          <div className="text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground">বাংলা</div>
-          <p className="mt-1 text-[12.5px]">
-            ফাংশনটি একটি লিস্টে যেসব আইটেম একাধিকবার আছে সেগুলো ফেরত দেয়।
-          </p>
+      </ParallaxScene>
+
+      {/* Marquee strip */}
+      <div className="relative mt-16 border-y-2 border-foreground bg-[var(--lime)] overflow-hidden">
+        <div className="marquee flex gap-10 py-3 whitespace-nowrap font-mono font-bold text-[13px] uppercase tracking-wider">
+          {Array.from({ length: 2 }).map((_, k) => (
+            <div key={k} className="flex gap-10">
+              {["Python", "•", "JavaScript", "•", "TypeScript", "•", "Java", "•", "C++", "•", "C#", "•", "Go", "•", "PHP", "•", "Rust", "•"].map((t, i) => (
+                <span key={i}>{t}</span>
+              ))}
+            </div>
+          ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 }
