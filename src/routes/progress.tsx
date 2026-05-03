@@ -294,8 +294,8 @@ function ProgressPage() {
 
 function Stat({ label, value, color }: { label: string; value: string | number; color: string }) {
   return (
-    <div className="rounded-2xl border-[2.5px] border-foreground p-4 shadow-pop" style={{ background: color }}>
-      <div className="text-[11px] font-mono uppercase tracking-widest opacity-70">{label}</div>
+    <div className="rounded-2xl border-[2.5px] border-foreground p-4 shadow-pop text-[oklch(0.18_0.02_270)]" style={{ background: color }}>
+      <div className="text-[11px] font-mono uppercase tracking-widest opacity-80">{label}</div>
       <div className="mt-1 text-2xl font-display font-bold">{value}</div>
     </div>
   );
