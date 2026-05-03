@@ -600,49 +600,86 @@ function AppPage() {
             </select>
           </div>
 
-          {/* Action toolbar: secondary on left, primary CTAs on right */}
-          <div className="flex flex-wrap items-center justify-between gap-2">
+          {/* Action toolbar: wraps cleanly on every breakpoint */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div className="flex flex-wrap items-center gap-1.5">
-              <button onClick={() => fileRef.current?.click()} aria-label="Upload file" title="Upload file" className="h-9 px-3 rounded-xl border-2 border-foreground bg-card text-foreground hover:bg-subtle text-[12.5px] font-semibold inline-flex items-center gap-1.5">
-                <Upload className="h-3.5 w-3.5" /><span className="hidden sm:inline">Upload</span>
-              </button>
+              <PopButton variant="secondary" size="md" onClick={() => fileRef.current?.click()} aria-label="Upload file from your device" title="Upload file">
+                <Upload className="h-3.5 w-3.5" aria-hidden="true" /><span className="hidden sm:inline">Upload</span>
+              </PopButton>
               <input ref={fileRef} type="file" hidden accept=".py,.js,.ts,.java,.c,.cpp,.go,.rs,.rb,.php,.html,.css,.sql,.txt" onChange={onUpload} />
-              <button onClick={saveAsSnippet} aria-label="Save as snippet" title="Save as snippet" className="h-9 px-3 rounded-xl border-2 border-foreground bg-card text-foreground hover:bg-subtle text-[12.5px] font-semibold inline-flex items-center gap-1.5">
-                <Bookmark className="h-3.5 w-3.5" /><span className="hidden sm:inline">Snippet</span>
-              </button>
-              <button
-                onClick={() => saveCurrent()}
-                disabled={saving}
-                aria-label="Save analysis"
-                title="Save analysis"
-                className="h-9 px-3 rounded-xl border-2 border-foreground bg-card text-foreground hover:bg-subtle font-semibold text-[12.5px] inline-flex items-center gap-1.5 disabled:opacity-60"
-              >
-                <Save className="h-3.5 w-3.5" /><span className="hidden sm:inline">{saving ? "Saving…" : "Save"}</span>
-              </button>
-              <label className="h-9 px-2.5 rounded-xl border-2 border-foreground bg-card text-foreground hover:bg-subtle text-[12.5px] font-semibold inline-flex items-center gap-1.5" title="Editor theme">
-                <Palette className="h-3.5 w-3.5" />
-                <select
-                  value={editorTheme}
-                  onChange={(e) => setEditorTheme(e.target.value)}
-                  className="bg-transparent outline-none font-semibold text-[12.5px] max-w-[120px] sm:max-w-none"
-                  aria-label="Editor theme"
+              <PopButton variant="secondary" size="md" onClick={saveAsSnippet} aria-label="Save current code as snippet" title="Save as snippet">
+                <Bookmark className="h-3.5 w-3.5" aria-hidden="true" /><span className="hidden sm:inline">Snippet</span>
+              </PopButton>
+              <PopButton variant="secondary" size="md" onClick={() => saveCurrent()} disabled={saving} aria-label="Save analysis" title="Save analysis">
+                <Save className="h-3.5 w-3.5" aria-hidden="true" /><span className="hidden sm:inline">{saving ? "Saving…" : "Save"}</span>
+              </PopButton>
+
+              {/* Theme picker — proper popover with previews */}
+              <div className="relative" data-theme-picker>
+                <PopButton
+                  variant="secondary"
+                  size="md"
+                  onClick={() => setThemePickerOpen((v) => !v)}
+                  aria-haspopup="listbox"
+                  aria-expanded={themePickerOpen}
+                  aria-label={`Editor theme: ${activeThemeMeta.label}`}
+                  title={`Editor theme: ${activeThemeMeta.label}`}
                 >
-                  {EDITOR_THEMES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
-                </select>
-              </label>
+                  <Palette className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span className="hidden sm:inline">Theme</span>
+                  <span
+                    aria-hidden="true"
+                    className="ml-1 inline-flex h-4 w-7 rounded-md border border-foreground/40 overflow-hidden"
+                    style={{ background: activeThemeMeta.bg }}
+                  >
+                    <span className="h-full w-1/2" style={{ background: activeThemeMeta.fg, opacity: 0.25 }} />
+                    <span className="h-full w-1/2" style={{ background: activeThemeMeta.accent }} />
+                  </span>
+                </PopButton>
+                {themePickerOpen && (
+                  <div
+                    role="listbox"
+                    aria-label="Editor themes"
+                    className="absolute right-0 sm:left-0 mt-2 w-72 z-40 rounded-xl border-2 border-foreground bg-popover text-popover-foreground shadow-pop p-1.5 max-h-[60vh] overflow-y-auto"
+                  >
+                    {EDITOR_THEMES.map((t) => {
+                      const selected = t.id === editorTheme;
+                      return (
+                        <button
+                          key={t.id}
+                          role="option"
+                          aria-selected={selected}
+                          onClick={() => { setEditorTheme(t.id); setThemePickerOpen(false); }}
+                          className={`w-full flex items-center gap-2.5 p-2 rounded-lg text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] ${selected ? "bg-subtle" : "hover:bg-subtle"}`}
+                        >
+                          <span
+                            aria-hidden="true"
+                            className="shrink-0 inline-flex flex-col h-9 w-14 rounded-md border-2 border-foreground/60 overflow-hidden font-mono text-[8px] leading-none"
+                            style={{ background: t.bg, color: t.fg }}
+                          >
+                            <span className="px-1 py-0.5" style={{ color: t.accent }}>const</span>
+                            <span className="px-1" style={{ color: t.fg }}>x = 1</span>
+                          </span>
+                          <span className="flex-1 min-w-0">
+                            <span className="block text-[13px] font-semibold truncate">{t.label}</span>
+                            <span className="block text-[10.5px] font-mono text-muted-foreground truncate">{t.id}</span>
+                          </span>
+                          {selected && <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">active</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="flex flex-wrap items-center gap-1.5 ml-auto">
-              <button onClick={startQuiz} className="h-10 px-3.5 rounded-xl border-2 border-foreground bg-[var(--violet)] text-[oklch(0.18_0.02_270)] font-bold text-[13px] shadow-pop hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all inline-flex items-center gap-1.5">
-                <GraduationCap className="h-4 w-4" /> Quiz me
-              </button>
-              <button
-                onClick={analyze}
-                disabled={analyzing}
-                className="h-10 px-4 rounded-xl border-2 border-foreground bg-[var(--coral)] text-[oklch(0.18_0.02_270)] font-bold text-[13px] shadow-pop hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all inline-flex items-center gap-1.5 disabled:opacity-60"
-              >
-                {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+            <div className="flex flex-wrap items-center gap-1.5 sm:ml-auto">
+              <PopButton variant="primary" tone="violet" size="lg" onClick={startQuiz} aria-label="Generate a quiz from this code">
+                <GraduationCap className="h-4 w-4" aria-hidden="true" /> Quiz me
+              </PopButton>
+              <PopButton variant="primary" tone="coral" size="lg" onClick={analyze} disabled={analyzing} aria-label="Analyze code with AI" aria-busy={analyzing}>
+                {analyzing ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Play className="h-4 w-4" aria-hidden="true" />}
                 {analyzing ? "Analyzing…" : "Analyze"}
-              </button>
+              </PopButton>
             </div>
           </div>
 
