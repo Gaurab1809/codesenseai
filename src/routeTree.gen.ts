@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SnippetsRouteImport } from './routes/snippets'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -21,6 +22,11 @@ import { Route as ApiAnalyzeRouteImport } from './routes/api/analyze'
 const SnippetsRoute = SnippetsRouteImport.update({
   id: '/snippets',
   path: '/snippets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const QuizRoute = QuizRouteImport.update({
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/progress': typeof ProgressRoute
   '/quiz': typeof QuizRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/snippets': typeof SnippetsRoute
   '/api/analyze': typeof ApiAnalyzeRoute
   '/api/quiz': typeof ApiQuizRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/progress': typeof ProgressRoute
   '/quiz': typeof QuizRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/snippets': typeof SnippetsRoute
   '/api/analyze': typeof ApiAnalyzeRoute
   '/api/quiz': typeof ApiQuizRoute
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/progress': typeof ProgressRoute
   '/quiz': typeof QuizRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/snippets': typeof SnippetsRoute
   '/api/analyze': typeof ApiAnalyzeRoute
   '/api/quiz': typeof ApiQuizRoute
@@ -98,6 +107,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/progress'
     | '/quiz'
+    | '/reset-password'
     | '/snippets'
     | '/api/analyze'
     | '/api/quiz'
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/progress'
     | '/quiz'
+    | '/reset-password'
     | '/snippets'
     | '/api/analyze'
     | '/api/quiz'
@@ -118,6 +129,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/progress'
     | '/quiz'
+    | '/reset-password'
     | '/snippets'
     | '/api/analyze'
     | '/api/quiz'
@@ -129,6 +141,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ProgressRoute: typeof ProgressRoute
   QuizRoute: typeof QuizRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SnippetsRoute: typeof SnippetsRoute
   ApiAnalyzeRoute: typeof ApiAnalyzeRoute
   ApiQuizRoute: typeof ApiQuizRoute
@@ -141,6 +154,13 @@ declare module '@tanstack/react-router' {
       path: '/snippets'
       fullPath: '/snippets'
       preLoaderRoute: typeof SnippetsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/quiz': {
@@ -201,6 +221,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ProgressRoute: ProgressRoute,
   QuizRoute: QuizRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SnippetsRoute: SnippetsRoute,
   ApiAnalyzeRoute: ApiAnalyzeRoute,
   ApiQuizRoute: ApiQuizRoute,
