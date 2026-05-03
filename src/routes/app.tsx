@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/brand/Logo";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { Loader2, Plus, Trash2, Pencil, LogOut, Languages, Play, FileCode, Save, Copy, Download, Sparkles, Bug, Wand2, ShieldCheck, Bookmark, GraduationCap, BarChart3, Upload, Search, ArrowRight, Flame } from "lucide-react";
+import { Loader2, Plus, Trash2, Pencil, LogOut, Languages, Play, FileCode, Save, Copy, Download, Sparkles, Bug, Wand2, ShieldCheck, Bookmark, GraduationCap, BarChart3, Upload, Search, ArrowRight, Flame, Palette } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ThemeToggle } from "@/components/landing/ThemeToggle";
@@ -94,6 +94,26 @@ function AppPage() {
   const [mode, setMode] = useState<"explain" | "bugs" | "optimize" | "security" | "bangla">("explain");
   const fileRef = useRef<HTMLInputElement>(null);
   const navigate2 = useNavigate();
+  const EDITOR_THEMES = [
+    { id: "auto", label: "Auto (system)" },
+    { id: "vs-light", label: "Light" },
+    { id: "vs-dark", label: "Dark" },
+    { id: "hc-black", label: "High Contrast" },
+    { id: "monokai", label: "Monokai" },
+    { id: "dracula", label: "Dracula" },
+    { id: "github-dark", label: "GitHub Dark" },
+    { id: "solarized-light", label: "Solarized Light" },
+    { id: "nord", label: "Nord" },
+  ] as const;
+  const [editorTheme, setEditorTheme] = useState<string>("auto");
+  useEffect(() => {
+    const saved = typeof window !== "undefined" ? localStorage.getItem("workspace.editorTheme") : null;
+    if (saved) setEditorTheme(saved);
+  }, []);
+  useEffect(() => {
+    if (typeof window !== "undefined") localStorage.setItem("workspace.editorTheme", editorTheme);
+  }, [editorTheme]);
+  const resolvedEditorTheme = editorTheme === "auto" ? (isDark ? "vs-dark" : "vs-light") : editorTheme;
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
@@ -576,9 +596,10 @@ function AppPage() {
                   height="480px"
                   language={monacoLang(language)}
                   value={code}
-                  theme={isDark ? "vs-dark" : "vs-light"}
+                  theme={resolvedEditorTheme}
                   onChange={(v) => setCode(v ?? "")}
                   onMount={(editor, monaco) => {
+                    defineCustomMonacoThemes(monaco);
                     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => analyze());
                   }}
                   options={{
