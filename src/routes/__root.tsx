@@ -33,7 +33,7 @@ export const Route = createRootRoute({
       { name: "description", content: "Paste your code and instantly get AI-powered explanations, bug detection, optimization suggestions, and Bangla learning support." },
       { name: "keywords", content: "AI Code Explainer, Programming Learning, Debugger, Code Review, Bangla Programming, AI Developer Tools" },
       { name: "author", content: "CodeSense AI" },
-      { name: "theme-color", content: "#0b0f1f" },
+      { name: "theme-color", content: "#ffffff" },
       { property: "og:title", content: "CodeSense AI – Understand Code. Fix Bugs. Learn Faster." },
       { property: "og:description", content: "AI-powered code explanations, bug detection, and Bangla learning support for beginner developers." },
       { property: "og:type", content: "website" },
@@ -57,7 +57,7 @@ export const Route = createRootRoute({
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <head>
         <HeadContent />
       </head>

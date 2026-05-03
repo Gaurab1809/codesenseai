@@ -6,7 +6,6 @@ import { DemoPreview } from "@/components/landing/DemoPreview";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { Pricing } from "@/components/landing/Pricing";
 import { Footer } from "@/components/landing/Footer";
-import { CustomCursor } from "@/components/landing/Cursor";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -15,7 +14,6 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <div className="relative min-h-screen bg-background text-foreground overflow-x-hidden">
-      <CustomCursor />
       <Navbar />
       <main>
         <Hero />
