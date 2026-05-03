@@ -33,7 +33,7 @@ export function Navbar() {
           <ThemeToggle />
           <Magnetic strength={6}>
             <a
-              href="#start"
+              href="/auth"
               data-cursor="hover"
               data-cursor-label="go!"
               className="inline-flex items-center h-9 px-3.5 rounded-xl bg-[var(--coral)] border-2 border-foreground text-foreground font-semibold text-[13px] shadow-pop hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all"

@@ -1,0 +1,361 @@
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Logo } from "@/components/brand/Logo";
+import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
+import { Loader2, Plus, Trash2, Pencil, LogOut, Languages, Play, FileCode, Save } from "lucide-react";
+
+type Analysis = {
+  id: string;
+  name: string;
+  language: string;
+  code: string;
+  ai_response: string | null;
+  output_lang: string;
+  created_at: string;
+  updated_at: string;
+};
+
+const LANGS = [
+  "javascript", "typescript", "python", "java", "c", "cpp", "go", "rust", "ruby", "php", "html", "css", "sql",
+];
+
+const STARTER = `// Paste your code here, then press Analyze.
+function fizzbuzz(n) {
+  for (let i = 1; i <= n; i++) {
+    if (i % 15 === 0) console.log("fizzbuzz");
+    else if (i % 3 === 0) console.log("fizz");
+    else if (i % 5 === 0) console.log("buzz");
+    else console.log(i);
+  }
+}
+fizzbuzz(20);`;
+
+export const Route = createFileRoute("/app")({
+  head: () => ({ meta: [{ title: "Workspace · CodeSense AI" }] }),
+  component: AppPage,
+});
+
+function AppPage() {
+  const navigate = useNavigate();
+  const [ready, setReady] = useState(false);
+  const [items, setItems] = useState<Analysis[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [name, setName] = useState("Untitled analysis");
+  const [language, setLanguage] = useState("javascript");
+  const [code, setCode] = useState(STARTER);
+  const [outputLang, setOutputLang] = useState<"en" | "bn">("en");
+  const [aiResponse, setAiResponse] = useState<string>("");
+  const [analyzing, setAnalyzing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (!session) navigate({ to: "/auth" });
+    });
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) navigate({ to: "/auth" });
+      else {
+        setReady(true);
+        loadList();
+      }
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [navigate]);
+
+  async function loadList() {
+    const { data, error } = await supabase
+      .from("analyses")
+      .select("*")
+      .order("updated_at", { ascending: false });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setItems(data ?? []);
+  }
+
+  function loadItem(item: Analysis) {
+    setActiveId(item.id);
+    setName(item.name);
+    setLanguage(item.language);
+    setCode(item.code);
+    setOutputLang((item.output_lang as "en" | "bn") || "en");
+    setAiResponse(item.ai_response ?? "");
+  }
+
+  function newAnalysis() {
+    setActiveId(null);
+    setName("Untitled analysis");
+    setLanguage("javascript");
+    setCode(STARTER);
+    setAiResponse("");
+  }
+
+  async function saveCurrent(nextResponse?: string) {
+    setSaving(true);
+    const { data: sess } = await supabase.auth.getSession();
+    const uid = sess.session?.user.id;
+    if (!uid) return;
+    const payload = {
+      user_id: uid,
+      name,
+      language,
+      code,
+      output_lang: outputLang,
+      ai_response: nextResponse ?? aiResponse ?? null,
+    };
+    if (activeId) {
+      const { error } = await supabase.from("analyses").update(payload).eq("id", activeId);
+      if (error) toast.error(error.message);
+    } else {
+      const { data, error } = await supabase.from("analyses").insert(payload).select().single();
+      if (error) toast.error(error.message);
+      else if (data) setActiveId(data.id);
+    }
+    await loadList();
+    setSaving(false);
+  }
+
+  async function analyze() {
+    if (!code.trim()) {
+      toast.error("Paste some code first.");
+      return;
+    }
+    setAnalyzing(true);
+    setAiResponse("");
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ code, language, outputLang }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        toast.error(json.error || "Analysis failed");
+        return;
+      }
+      setAiResponse(json.content);
+      await saveCurrent(json.content);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Network error");
+    } finally {
+      setAnalyzing(false);
+    }
+  }
+
+  async function rename(id: string, currentName: string) {
+    const next = window.prompt("Rename analysis", currentName);
+    if (!next || next === currentName) return;
+    const { error } = await supabase.from("analyses").update({ name: next }).eq("id", id);
+    if (error) toast.error(error.message);
+    else {
+      if (id === activeId) setName(next);
+      loadList();
+    }
+  }
+
+  async function remove(id: string) {
+    if (!window.confirm("Delete this analysis?")) return;
+    const { error } = await supabase.from("analyses").delete().eq("id", id);
+    if (error) toast.error(error.message);
+    else {
+      if (id === activeId) newAnalysis();
+      loadList();
+    }
+  }
+
+  async function signOut() {
+    await supabase.auth.signOut();
+    navigate({ to: "/" });
+  }
+
+  const lineCount = useMemo(() => code.split("\n").length, [code]);
+
+  if (!ready) {
+    return (
+      <div className="min-h-screen grid place-items-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <Toaster />
+      {/* Topbar */}
+      <header className="sticky top-0 z-30 border-b-2 border-foreground bg-card">
+        <div className="px-4 h-14 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Link to="/"><Logo /></Link>
+            <span className="hidden md:inline text-xs font-mono px-2 py-0.5 rounded bg-foreground text-background">/workspace</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 p-1 rounded-xl border-2 border-foreground bg-background">
+              <Languages className="h-3.5 w-3.5 ml-1.5 text-muted-foreground" />
+              {(["en", "bn"] as const).map((l) => (
+                <button
+                  key={l}
+                  onClick={() => setOutputLang(l)}
+                  className={`px-2.5 py-1 rounded-lg text-[12px] font-bold transition-colors ${
+                    outputLang === l ? "bg-foreground text-background" : "hover:bg-subtle"
+                  }`}
+                >
+                  {l === "en" ? "English" : "বাংলা"}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={signOut}
+              className="h-9 px-3 rounded-xl border-2 border-foreground bg-card hover:bg-subtle transition-colors text-[13px] font-semibold inline-flex items-center gap-1.5"
+            >
+              <LogOut className="h-3.5 w-3.5" /> Sign out
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div className="grid lg:grid-cols-[260px_1fr] min-h-[calc(100vh-3.5rem)]">
+        {/* History panel */}
+        <aside className="border-r-2 border-foreground bg-subtle/40 p-3 space-y-3 overflow-y-auto max-h-[calc(100vh-3.5rem)]">
+          <button
+            onClick={newAnalysis}
+            className="w-full h-10 rounded-xl border-2 border-foreground bg-[var(--lime)] font-bold text-[13px] shadow-pop hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all inline-flex items-center justify-center gap-1.5"
+          >
+            <Plus className="h-4 w-4" /> New analysis
+          </button>
+          <div className="text-[11px] uppercase tracking-widest font-mono text-muted-foreground px-1 pt-2">History</div>
+          {items.length === 0 && (
+            <div className="text-xs text-muted-foreground px-1">No analyses yet. Run your first one →</div>
+          )}
+          <ul className="space-y-1.5">
+            {items.map((it) => {
+              const active = it.id === activeId;
+              return (
+                <li key={it.id}>
+                  <div
+                    className={`group rounded-xl border-2 border-foreground p-2.5 cursor-pointer transition-all ${
+                      active ? "bg-card shadow-pop -translate-y-0.5" : "bg-card/60 hover:bg-card hover:-translate-y-0.5 hover:shadow-pop"
+                    }`}
+                    onClick={() => loadItem(it)}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-[13px] font-semibold truncate">{it.name}</div>
+                        <div className="text-[11px] text-muted-foreground font-mono mt-0.5 flex items-center gap-1.5">
+                          <FileCode className="h-3 w-3" /> {it.language}
+                          <span>·</span>
+                          {new Date(it.updated_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); rename(it.id, it.name); }}
+                          className="h-6 w-6 grid place-items-center rounded border border-foreground bg-background hover:bg-subtle"
+                          aria-label="Rename"
+                        ><Pencil className="h-3 w-3" /></button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); remove(it.id); }}
+                          className="h-6 w-6 grid place-items-center rounded border border-foreground bg-background hover:bg-[var(--coral)]"
+                          aria-label="Delete"
+                        ><Trash2 className="h-3 w-3" /></button>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </aside>
+
+        {/* Main */}
+        <main className="p-4 lg:p-6 space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="flex-1 min-w-[200px] h-10 px-3 rounded-xl border-2 border-foreground bg-card font-semibold outline-none focus:shadow-pop transition-shadow"
+            />
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="h-10 px-3 rounded-xl border-2 border-foreground bg-card font-mono text-[13px] outline-none"
+            >
+              {LANGS.map((l) => <option key={l} value={l}>{l}</option>)}
+            </select>
+            <button
+              onClick={() => saveCurrent()}
+              disabled={saving}
+              className="h-10 px-3.5 rounded-xl border-2 border-foreground bg-card hover:bg-subtle font-semibold text-[13px] inline-flex items-center gap-1.5"
+            >
+              <Save className="h-3.5 w-3.5" /> {saving ? "Saving…" : "Save"}
+            </button>
+            <button
+              onClick={analyze}
+              disabled={analyzing}
+              className="h-10 px-4 rounded-xl border-2 border-foreground bg-[var(--coral)] font-bold text-[13px] shadow-pop hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all inline-flex items-center gap-1.5 disabled:opacity-60"
+            >
+              {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+              {analyzing ? "Analyzing…" : "Analyze"}
+            </button>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-4">
+            {/* Editor */}
+            <div className="rounded-2xl border-[2.5px] border-foreground bg-card shadow-pop overflow-hidden">
+              <div className="flex items-center justify-between px-3 py-2 border-b-2 border-foreground bg-subtle">
+                <div className="flex gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-[var(--coral)]" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[var(--amber,#f5b700)]" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[var(--lime)]" />
+                </div>
+                <div className="font-mono text-[11px] font-bold opacity-80">{language} · {lineCount} lines</div>
+                <span className="font-mono text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-foreground text-background">editor</span>
+              </div>
+              <textarea
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                spellCheck={false}
+                className="w-full h-[480px] p-4 bg-transparent font-mono text-[13px] leading-6 outline-none resize-none"
+                placeholder="Paste your code here…"
+              />
+            </div>
+
+            {/* AI response */}
+            <div className="rounded-2xl border-[2.5px] border-foreground bg-card shadow-pop overflow-hidden">
+              <div className="flex items-center justify-between px-3 py-2 border-b-2 border-foreground bg-subtle">
+                <span className="font-display font-bold text-[13px]">CodeSense Mentor</span>
+                <span className="font-mono text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-[var(--violet)] text-foreground border border-foreground">
+                  {outputLang === "bn" ? "বাংলা" : "english"}
+                </span>
+              </div>
+              <div className="p-5 h-[480px] overflow-y-auto">
+                {analyzing && !aiResponse && (
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Reading your code…
+                  </div>
+                )}
+                {!analyzing && !aiResponse && (
+                  <div className="text-sm text-muted-foreground">
+                    Press <span className="font-mono px-1.5 py-0.5 bg-subtle rounded border border-foreground">Analyze</span> to get an explanation, bug report, and concept guide tailored for beginners.
+                  </div>
+                )}
+                {aiResponse && (
+                  <article className="prose-sm whitespace-pre-wrap text-[13.5px] leading-7 font-sans">
+                    {aiResponse}
+                  </article>
+                )}
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}

@@ -40,7 +40,7 @@ export function Pricing() {
                 <Magnetic strength={6}>
                   <a
                     data-cursor="hover"
-                    href="#start"
+                    href="/auth"
                     className="mt-5 w-full inline-flex justify-center items-center h-10 rounded-xl border-2 border-foreground font-bold text-[13px] shadow-pop hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
                     style={{ background: p.highlight ? "var(--card)" : p.color }}
                   >
