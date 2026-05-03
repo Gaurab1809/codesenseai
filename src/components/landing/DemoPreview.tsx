@@ -1,8 +1,11 @@
 import { motion } from "framer-motion";
 import { Bug, Wand2, ShieldCheck, Languages, Play, Upload, ArrowRight, Sparkles } from "lucide-react";
-import { useRef, useState } from "react";
-import Editor from "@monaco-editor/react";
+import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import { Link } from "@tanstack/react-router";
+
+const Editor = lazy(() =>
+  import("@monaco-editor/react").then((m) => ({ default: m.Editor ?? m.default }))
+);
 
 const STARTERS: Record<string, string> = {
   python: `def find_duplicates(items):\n    seen = set()\n    dupes = []\n    for x in items:\n        if x in seen:\n            dupes.append(x)\n        else:\n            seen.add(x)\n    return dupes`,
@@ -28,6 +31,16 @@ export function DemoPreview() {
   const [language, setLanguage] = useState<string>("python");
   const [code, setCode] = useState<string>(STARTERS.python);
   const [active, setActive] = useState<typeof ACTIONS[number]["id"]>("explain");
+  const [mounted, setMounted] = useState(false);
+  const [isDark, setIsDark] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+    const update = () => setIsDark(document.documentElement.classList.contains("dark"));
+    update();
+    const obs = new MutationObserver(update);
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
 
   function changeLang(l: string) {
     setLanguage(l);
@@ -96,23 +109,30 @@ export function DemoPreview() {
           <div className="grid lg:grid-cols-2 min-h-[440px]">
             {/* Monaco editor */}
             <div className="border-b-2 lg:border-b-0 lg:border-r-2 border-foreground">
-              <Editor
-                height="440px"
-                language={language}
-                value={code}
-                theme="vs-dark"
-                onChange={(v) => setCode(v ?? "")}
-                options={{
-                  fontFamily: "JetBrains Mono, ui-monospace, monospace",
-                  fontSize: 13,
-                  minimap: { enabled: false },
-                  smoothScrolling: true,
-                  scrollBeyondLastLine: false,
-                  padding: { top: 14 },
-                  cursorBlinking: "smooth",
-                  renderLineHighlight: "all",
-                }}
-              />
+              {mounted ? (
+                <Suspense fallback={<div className="h-[440px] grid place-items-center text-xs text-muted-foreground">Loading editor…</div>}>
+                  <Editor
+                    height="440px"
+                    language={language}
+                    value={code}
+                    theme={isDark ? "vs-dark" : "vs-light"}
+                    onChange={(v) => setCode(v ?? "")}
+                    options={{
+                      fontFamily: "JetBrains Mono, ui-monospace, monospace",
+                      fontSize: 13,
+                      minimap: { enabled: false },
+                      smoothScrolling: true,
+                      scrollBeyondLastLine: false,
+                      padding: { top: 14 },
+                      cursorBlinking: "smooth",
+                      renderLineHighlight: "all",
+                      automaticLayout: true,
+                    }}
+                  />
+                </Suspense>
+              ) : (
+                <div className="h-[440px] grid place-items-center text-xs text-muted-foreground">Loading editor…</div>
+              )}
               <div className="flex flex-wrap gap-1.5 p-3 border-t-2 border-foreground">
                 {ACTIONS.map((b) => (
                   <button
