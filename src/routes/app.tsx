@@ -25,6 +25,11 @@ const LANGS = [
   "javascript", "typescript", "python", "java", "c", "cpp", "go", "rust", "ruby", "php", "html", "css", "sql",
 ];
 
+function monacoLang(l: string): string {
+  const map: Record<string, string> = { c: "c", cpp: "cpp", py: "python", rb: "ruby" };
+  return map[l] ?? l;
+}
+
 const STARTER = `// Paste your code here, then press Analyze.
 function fizzbuzz(n) {
   for (let i = 1; i <= n; i++) {
