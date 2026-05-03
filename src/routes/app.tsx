@@ -7,7 +7,12 @@ import { Toaster } from "@/components/ui/sonner";
 import { Loader2, Plus, Trash2, Pencil, LogOut, Languages, Play, FileCode, Save, Copy, Download, Sparkles, Bug, Wand2, ShieldCheck, Bookmark, GraduationCap, BarChart3, Upload } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import Editor from "@monaco-editor/react";
+import { ThemeToggle } from "@/components/landing/ThemeToggle";
+import { lazy, Suspense } from "react";
+
+const Editor = lazy(() =>
+  import("@monaco-editor/react").then((m) => ({ default: m.Editor ?? m.default }))
+);
 
 type Analysis = {
   id: string;
@@ -64,6 +69,16 @@ export const Route = createFileRoute("/app")({
 function AppPage() {
   const navigate = useNavigate();
   const [ready, setReady] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  const [isDark, setIsDark] = useState(false);
+  useEffect(() => {
+    const update = () => setIsDark(document.documentElement.classList.contains("dark"));
+    update();
+    const obs = new MutationObserver(update);
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
   const [items, setItems] = useState<Analysis[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [name, setName] = useState("Untitled analysis");
@@ -329,6 +344,7 @@ function AppPage() {
             >
               <LogOut className="h-3.5 w-3.5" /> Sign out
             </button>
+            <ThemeToggle />
           </div>
         </div>
       </header>
@@ -460,26 +476,33 @@ function AppPage() {
                 <div className="font-mono text-[11px] font-bold opacity-80">{language} · {lineCount} lines</div>
                 <span className="font-mono text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-foreground text-background">editor</span>
               </div>
-              <Editor
-                height="480px"
-                language={monacoLang(language)}
-                value={code}
-                theme="vs-dark"
-                onChange={(v) => setCode(v ?? "")}
-                onMount={(editor, monaco) => {
-                  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => analyze());
-                }}
-                options={{
-                  fontFamily: "JetBrains Mono, ui-monospace, monospace",
-                  fontSize: 13,
-                  minimap: { enabled: false },
-                  smoothScrolling: true,
-                  scrollBeyondLastLine: false,
-                  padding: { top: 14 },
-                  cursorBlinking: "smooth",
-                  renderLineHighlight: "all",
-                }}
-              />
+              {mounted ? (
+              <Suspense fallback={<div className="h-[480px] grid place-items-center text-xs text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /></div>}>
+                <Editor
+                  height="480px"
+                  language={monacoLang(language)}
+                  value={code}
+                  theme={isDark ? "vs-dark" : "vs-light"}
+                  onChange={(v) => setCode(v ?? "")}
+                  onMount={(editor, monaco) => {
+                    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => analyze());
+                  }}
+                  options={{
+                    fontFamily: "JetBrains Mono, ui-monospace, monospace",
+                    fontSize: 13,
+                    minimap: { enabled: false },
+                    smoothScrolling: true,
+                    scrollBeyondLastLine: false,
+                    padding: { top: 14 },
+                    cursorBlinking: "smooth",
+                    renderLineHighlight: "all",
+                    automaticLayout: true,
+                  }}
+                />
+              </Suspense>
+              ) : (
+                <div className="h-[480px] grid place-items-center text-xs text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /></div>
+              )}
             </div>
 
             {/* AI response */}
