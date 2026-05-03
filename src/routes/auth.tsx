@@ -67,7 +67,16 @@ function AuthPage() {
     <div className="min-h-screen grid place-items-center bg-background px-4 dot-paper">
       <Toaster />
       <div className="w-full max-w-md rounded-2xl border-[2.5px] border-foreground bg-card p-7 shadow-pop-lg">
-        <Link to="/" className="inline-block mb-5"><Logo /></Link>
+        <div className="flex items-center justify-between mb-5">
+          <Link to="/" className="inline-block" aria-label="CodeSense AI home"><Logo /></Link>
+          <Link
+            to="/"
+            aria-label="Back to landing page"
+            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border-2 border-foreground bg-card text-foreground hover:bg-subtle text-[12.5px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> Back
+          </Link>
+        </div>
         <h1 className="text-2xl font-display font-bold tracking-tight">
           {mode === "signin" ? "Welcome back" : mode === "signup" ? "Create your account" : "Reset your password"}
         </h1>
