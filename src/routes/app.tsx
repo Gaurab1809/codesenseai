@@ -4,7 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/brand/Logo";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { Loader2, Plus, Trash2, Pencil, LogOut, Languages, Play, FileCode, Save } from "lucide-react";
+import { Loader2, Plus, Trash2, Pencil, LogOut, Languages, Play, FileCode, Save, Copy, Download, Sparkles } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type Analysis = {
   id: string;
@@ -31,6 +33,22 @@ function fizzbuzz(n) {
   }
 }
 fizzbuzz(20);`;
+
+const STARTERS: Record<string, string> = {
+  javascript: STARTER,
+  typescript: `function greet(name: string): string {\n  return "Hello, " + name;\n}\nconsole.log(greet("world"));`,
+  python: `def fizzbuzz(n):\n    for i in range(1, n + 1):\n        if i % 15 == 0: print("fizzbuzz")\n        elif i % 3 == 0: print("fizz")\n        elif i % 5 == 0: print("buzz")\n        else: print(i)\n\nfizzbuzz(20)`,
+  java: `public class Main {\n  public static void main(String[] args) {\n    for (int i = 1; i <= 20; i++) System.out.println(i);\n  }\n}`,
+  c: `#include <stdio.h>\nint main(){ for(int i=1;i<=20;i++) printf("%d\\n", i); return 0; }`,
+  cpp: `#include <iostream>\nint main(){ for(int i=1;i<=20;i++) std::cout<<i<<"\\n"; }`,
+  go: `package main\nimport "fmt"\nfunc main(){ for i:=1;i<=20;i++ { fmt.Println(i) } }`,
+  rust: `fn main(){ for i in 1..=20 { println!("{}", i); } }`,
+  ruby: `(1..20).each { |i| puts i }`,
+  php: `<?php for ($i=1;$i<=20;$i++) echo $i."\\n";`,
+  html: `<!doctype html>\n<html><body><h1>Hello</h1></body></html>`,
+  css: `.btn { background: tomato; padding: 8px 14px; border-radius: 8px; }`,
+  sql: `SELECT name, COUNT(*) AS total\nFROM orders\nGROUP BY name\nORDER BY total DESC;`,
+};
 
 export const Route = createFileRoute("/app")({
   head: () => ({ meta: [{ title: "Workspace · CodeSense AI" }] }),
@@ -91,6 +109,13 @@ function AppPage() {
     setLanguage("javascript");
     setCode(STARTER);
     setAiResponse("");
+  }
+
+  function loadStarter(lang: string) {
+    setLanguage(lang);
+    if (!activeId && (code.trim() === "" || Object.values(STARTERS).includes(code) || code === STARTER)) {
+      setCode(STARTERS[lang] ?? "");
+    }
   }
 
   async function saveCurrent(nextResponse?: string) {
@@ -177,6 +202,37 @@ function AppPage() {
   }
 
   const lineCount = useMemo(() => code.split("\n").length, [code]);
+
+  function onEditorKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      analyze();
+      return;
+    }
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const t = e.currentTarget;
+      const s = t.selectionStart, en = t.selectionEnd;
+      const next = code.slice(0, s) + "  " + code.slice(en);
+      setCode(next);
+      requestAnimationFrame(() => { t.selectionStart = t.selectionEnd = s + 2; });
+    }
+  }
+
+  function copyResponse() {
+    if (!aiResponse) return;
+    navigator.clipboard.writeText(aiResponse);
+    toast.success("Copied to clipboard");
+  }
+
+  function downloadResponse() {
+    if (!aiResponse) return;
+    const blob = new Blob([`# ${name}\n\n${aiResponse}`], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `${name.replace(/\s+/g, "-").toLowerCase()}.md`;
+    a.click(); URL.revokeObjectURL(url);
+  }
 
   if (!ready) {
     return (
@@ -284,7 +340,7 @@ function AppPage() {
             />
             <select
               value={language}
-              onChange={(e) => setLanguage(e.target.value)}
+              onChange={(e) => loadStarter(e.target.value)}
               className="h-10 px-3 rounded-xl border-2 border-foreground bg-card font-mono text-[13px] outline-none"
             >
               {LANGS.map((l) => <option key={l} value={l}>{l}</option>)}
@@ -321,6 +377,7 @@ function AppPage() {
               <textarea
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
+                onKeyDown={onEditorKeyDown}
                 spellCheck={false}
                 className="w-full h-[480px] p-4 bg-transparent font-mono text-[13px] leading-6 outline-none resize-none"
                 placeholder="Paste your code here…"
@@ -330,10 +387,28 @@ function AppPage() {
             {/* AI response */}
             <div className="rounded-2xl border-[2.5px] border-foreground bg-card shadow-pop overflow-hidden">
               <div className="flex items-center justify-between px-3 py-2 border-b-2 border-foreground bg-subtle">
-                <span className="font-display font-bold text-[13px]">CodeSense Mentor</span>
-                <span className="font-mono text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-[var(--violet)] text-foreground border border-foreground">
-                  {outputLang === "bn" ? "বাংলা" : "english"}
+                <span className="font-display font-bold text-[13px] inline-flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5" /> CodeSense Mentor
                 </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={copyResponse}
+                    disabled={!aiResponse}
+                    className="h-7 w-7 grid place-items-center rounded-md border border-foreground bg-background hover:bg-subtle disabled:opacity-40"
+                    aria-label="Copy"
+                    title="Copy response"
+                  ><Copy className="h-3.5 w-3.5" /></button>
+                  <button
+                    onClick={downloadResponse}
+                    disabled={!aiResponse}
+                    className="h-7 w-7 grid place-items-center rounded-md border border-foreground bg-background hover:bg-subtle disabled:opacity-40"
+                    aria-label="Download"
+                    title="Download as Markdown"
+                  ><Download className="h-3.5 w-3.5" /></button>
+                  <span className="font-mono text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-[var(--violet)] text-foreground border border-foreground">
+                    {outputLang === "bn" ? "বাংলা" : "english"}
+                  </span>
+                </div>
               </div>
               <div className="p-5 h-[480px] overflow-y-auto">
                 {analyzing && !aiResponse && (
@@ -343,12 +418,31 @@ function AppPage() {
                 )}
                 {!analyzing && !aiResponse && (
                   <div className="text-sm text-muted-foreground">
-                    Press <span className="font-mono px-1.5 py-0.5 bg-subtle rounded border border-foreground">Analyze</span> to get an explanation, bug report, and concept guide tailored for beginners.
+                    Press <span className="font-mono px-1.5 py-0.5 bg-subtle rounded border border-foreground">Analyze</span> (or <span className="font-mono px-1.5 py-0.5 bg-subtle rounded border border-foreground">⌘/Ctrl + Enter</span>) to get an explanation, bug report, and concept guide tailored for beginners.
                   </div>
                 )}
                 {aiResponse && (
-                  <article className="prose-sm whitespace-pre-wrap text-[13.5px] leading-7 font-sans">
-                    {aiResponse}
+                  <article className="text-[13.5px] leading-7 font-sans space-y-3 markdown-body">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        h2: ({ children }) => <h2 className="font-display text-base font-bold mt-4 mb-1 border-b-2 border-foreground/15 pb-1">{children}</h2>,
+                        h3: ({ children }) => <h3 className="font-display text-sm font-bold mt-3 mb-1">{children}</h3>,
+                        p: ({ children }) => <p className="mb-2">{children}</p>,
+                        ul: ({ children }) => <ul className="list-disc pl-5 space-y-1">{children}</ul>,
+                        ol: ({ children }) => <ol className="list-decimal pl-5 space-y-1">{children}</ol>,
+                        code: ({ children, className }) => {
+                          const isBlock = (className ?? "").includes("language-");
+                          return isBlock
+                            ? <code className="block whitespace-pre overflow-x-auto p-3 rounded-lg bg-subtle border border-foreground/20 font-mono text-[12.5px]">{children}</code>
+                            : <code className="px-1 py-0.5 rounded bg-subtle border border-foreground/20 font-mono text-[12px]">{children}</code>;
+                        },
+                        pre: ({ children }) => <pre className="my-2">{children}</pre>,
+                        a: ({ children, href }) => <a className="underline decoration-2 underline-offset-2" href={href} target="_blank" rel="noreferrer">{children}</a>,
+                      }}
+                    >
+                      {aiResponse}
+                    </ReactMarkdown>
                   </article>
                 )}
               </div>
