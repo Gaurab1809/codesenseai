@@ -141,7 +141,13 @@ function QuizPage() {
       <main className="mx-auto max-w-2xl px-5 py-10">
         <div className="flex items-center justify-between text-[12px] font-mono uppercase tracking-widest text-muted-foreground">
           <span className="inline-flex items-center gap-1.5"><GraduationCap className="h-3.5 w-3.5" /> {quiz.topic}</span>
-          <span>{Math.min(step + 1, quiz.questions.length)} / {quiz.questions.length}</span>
+          <span className="inline-flex items-center gap-2">
+            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-foreground ${difficulty === "easy" ? "bg-[var(--lime)]" : difficulty === "hard" ? "bg-[var(--coral)]" : "bg-[var(--amber)]"}`}>
+              {difficulty === "easy" ? <Snowflake className="h-3 w-3" /> : difficulty === "hard" ? <Flame className="h-3 w-3" /> : <Zap className="h-3 w-3" />}
+              {difficulty}
+            </span>
+            <span>{Math.min(step + 1, quiz.questions.length)} / {quiz.questions.length}</span>
+          </span>
         </div>
         <div className="mt-3 h-2 rounded-full border-2 border-foreground bg-card overflow-hidden">
           <div className="h-full bg-[var(--lime)]" style={{ width: `${((done ? quiz.questions.length : step) / quiz.questions.length) * 100}%` }} />
@@ -190,12 +196,56 @@ function QuizPage() {
               </button>
             </div>
           </div>
+        ) : reviewing ? (
+          <div className="mt-8 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display font-bold text-xl inline-flex items-center gap-2"><BookOpen className="h-5 w-5" /> Review</h2>
+              <button onClick={() => setReviewing(false)} className="h-9 px-3 rounded-xl border-2 border-foreground bg-card text-[12.5px] font-bold">Back to results</button>
+            </div>
+            {quiz.questions.map((qq, i) => {
+              const mine = answers[i];
+              const correct = mine === qq.answerIndex;
+              return (
+                <div key={i} className="rounded-2xl border-[2.5px] border-foreground bg-card p-5 shadow-pop">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] uppercase tracking-widest px-1.5 py-0.5 bg-subtle border border-foreground rounded">Q{i + 1} · {qq.type === "predict" ? "Predict" : "MCQ"}</span>
+                    <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded border-2 border-foreground ${correct ? "bg-[var(--lime)]" : "bg-[var(--coral)]"}`}>
+                      {correct ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />} {correct ? "Correct" : "Wrong"}
+                    </span>
+                  </div>
+                  <h3 className="mt-2 font-display font-bold text-base leading-snug">{qq.question}</h3>
+                  <ul className="mt-3 space-y-1.5">
+                    {qq.options.map((opt, j) => {
+                      const isCorrect = j === qq.answerIndex;
+                      const isMine = j === mine;
+                      return (
+                        <li key={j} className={`flex items-start gap-2 p-2.5 rounded-lg border-2 border-foreground/80 ${isCorrect ? "bg-[var(--lime)]" : isMine ? "bg-[var(--coral)]" : "bg-subtle"}`}>
+                          <span className="font-mono text-[11px] mt-0.5 px-1.5 py-0.5 rounded bg-background border border-foreground">{String.fromCharCode(65 + j)}</span>
+                          <span className="flex-1 whitespace-pre-wrap text-[13px]">{opt}</span>
+                          {isCorrect && <span className="text-[10px] font-mono uppercase">correct</span>}
+                          {isMine && !isCorrect && <span className="text-[10px] font-mono uppercase">your pick</span>}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <div className="mt-3 rounded-xl border-2 border-foreground p-3 bg-subtle text-[13px] leading-6">
+                    <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Explanation</div>
+                    {qq.explanation}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         ) : (
           <div className="mt-8 rounded-2xl border-[2.5px] border-foreground bg-card p-7 shadow-pop-lg text-center">
             <div className="text-sm font-mono uppercase tracking-widest text-muted-foreground">your score</div>
             <div className="mt-2 text-6xl font-display font-bold">{score}<span className="text-2xl text-muted-foreground"> / {quiz.questions.length}</span></div>
             <div className="mt-2 text-muted-foreground">{score === quiz.questions.length ? "Perfect run! 🎉" : score >= quiz.questions.length / 2 ? "Solid work — keep going!" : "Take another pass and you've got this."}</div>
+            <div className="mt-3 text-[11px] font-mono uppercase tracking-widest text-muted-foreground">Difficulty: {difficulty} · next quiz adapts to your scores</div>
             <div className="mt-6 flex flex-wrap gap-2 justify-center">
+              <button onClick={() => setReviewing(true)} className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl border-2 border-foreground bg-[var(--sky)] font-bold text-[13px] shadow-pop hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
+                <BookOpen className="h-4 w-4" /> Review answers
+              </button>
               <button onClick={restart} className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl border-2 border-foreground bg-card font-bold text-[13px]">
                 <RotateCcw className="h-4 w-4" /> Retry
               </button>
