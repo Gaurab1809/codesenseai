@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -26,6 +27,7 @@ export function Navbar() {
           </nav>
         </div>
         <div className="flex items-center gap-1.5">
+          <ThemeToggle />
           <Button variant="ghost" size="sm" className="text-[13px]">Sign in</Button>
           <Button size="sm" className="text-[13px] h-8 px-3 rounded-md">
             Try free →
