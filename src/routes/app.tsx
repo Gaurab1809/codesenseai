@@ -603,6 +603,17 @@ function AppPage() {
               >
                 <Save className="h-3.5 w-3.5" /><span className="hidden sm:inline">{saving ? "Saving…" : "Save"}</span>
               </button>
+              <label className="h-9 px-2.5 rounded-xl border-2 border-foreground bg-card text-foreground hover:bg-subtle text-[12.5px] font-semibold inline-flex items-center gap-1.5" title="Editor theme">
+                <Palette className="h-3.5 w-3.5" />
+                <select
+                  value={editorTheme}
+                  onChange={(e) => setEditorTheme(e.target.value)}
+                  className="bg-transparent outline-none font-semibold text-[12.5px] max-w-[120px] sm:max-w-none"
+                  aria-label="Editor theme"
+                >
+                  {EDITOR_THEMES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+                </select>
+              </label>
             </div>
             <div className="flex flex-wrap items-center gap-1.5 ml-auto">
               <button onClick={startQuiz} className="h-10 px-3.5 rounded-xl border-2 border-foreground bg-[var(--violet)] text-[oklch(0.18_0.02_270)] font-bold text-[13px] shadow-pop hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all inline-flex items-center gap-1.5">
