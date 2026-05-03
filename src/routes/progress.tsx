@@ -153,7 +153,7 @@ function ProgressPage() {
             <Link to="/"><Logo /></Link>
             <span className="hidden md:inline text-xs font-mono px-2 py-0.5 rounded bg-foreground text-background">/progress</span>
           </div>
-          <Link to="/app" className="h-9 px-3 rounded-xl border-2 border-foreground bg-[var(--coral)] font-bold text-[13px] inline-flex items-center gap-1.5 shadow-pop hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
+          <Link to="/app" className="h-9 px-3 rounded-xl border-2 border-foreground bg-[var(--coral)] text-[oklch(0.18_0.02_270)] font-bold text-[13px] inline-flex items-center gap-1.5 shadow-pop hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
             Workspace <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
@@ -179,7 +179,7 @@ function ProgressPage() {
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="font-display font-bold text-lg inline-flex items-center gap-2"><Flame className="h-5 w-5" /> Streak & trend</div>
             {items.length >= 4 && (
-              <span className={`inline-flex items-center gap-1 text-[12px] font-bold px-2 py-1 rounded border-2 border-foreground ${trend >= 0 ? "bg-[var(--lime)]" : "bg-[var(--coral)]"}`}>
+              <span className={`inline-flex items-center gap-1 text-[12px] font-bold px-2 py-1 rounded border-2 border-foreground text-[oklch(0.18_0.02_270)] ${trend >= 0 ? "bg-[var(--lime)]" : "bg-[var(--coral)]"}`}>
                 {trend >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
                 {trend >= 0 ? "+" : ""}{Math.round(trend * 100)}% vs early quizzes
               </span>
@@ -205,7 +205,7 @@ function ProgressPage() {
             {milestones.map((m) => (
               <div
                 key={m.id}
-                className={`rounded-xl border-2 border-foreground p-3 transition-all ${m.achieved ? "shadow-pop -translate-y-0.5" : "opacity-50"}`}
+                className={`rounded-xl border-2 border-foreground p-3 transition-all ${m.achieved ? "shadow-pop -translate-y-0.5 text-[oklch(0.18_0.02_270)]" : "opacity-50 bg-card text-foreground"}`}
                 style={{ background: m.achieved ? m.color : undefined }}
               >
                 <m.icon className="h-5 w-5" />
@@ -271,7 +271,7 @@ function ProgressPage() {
                         <div className="font-display font-bold text-[13.5px] truncate">{t.key}</div>
                         <div className="text-[11px] font-mono text-muted-foreground">{t.n} quiz{t.n === 1 ? "" : "zes"} · avg {Math.round(t.avg * 100)}%</div>
                       </div>
-                      <span className={`inline-flex items-center gap-1 text-[10.5px] font-bold px-1.5 py-0.5 rounded border-2 border-foreground ${trend >= 0 ? "bg-[var(--lime)]" : "bg-[var(--coral)]"}`}>
+                      <span className={`inline-flex items-center gap-1 text-[10.5px] font-bold px-1.5 py-0.5 rounded border-2 border-foreground text-[oklch(0.18_0.02_270)] ${trend >= 0 ? "bg-[var(--lime)]" : "bg-[var(--coral)]"}`}>
                         {trend >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                         {trend >= 0 ? "+" : ""}{Math.round(trend * 100)}%
                       </span>
@@ -294,8 +294,8 @@ function ProgressPage() {
 
 function Stat({ label, value, color }: { label: string; value: string | number; color: string }) {
   return (
-    <div className="rounded-2xl border-[2.5px] border-foreground p-4 shadow-pop" style={{ background: color }}>
-      <div className="text-[11px] font-mono uppercase tracking-widest opacity-70">{label}</div>
+    <div className="rounded-2xl border-[2.5px] border-foreground p-4 shadow-pop text-[oklch(0.18_0.02_270)]" style={{ background: color }}>
+      <div className="text-[11px] font-mono uppercase tracking-widest opacity-80">{label}</div>
       <div className="mt-1 text-2xl font-display font-bold">{value}</div>
     </div>
   );

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/brand/Logo";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { Loader2, Plus, Trash2, Pencil, LogOut, Languages, Play, FileCode, Save, Copy, Download, Sparkles, Bug, Wand2, ShieldCheck, Bookmark, GraduationCap, BarChart3, Upload, Search, ArrowRight, Flame } from "lucide-react";
+import { Loader2, Plus, Trash2, Pencil, LogOut, Languages, Play, FileCode, Save, Copy, Download, Sparkles, Bug, Wand2, ShieldCheck, Bookmark, GraduationCap, BarChart3, Upload, Search, ArrowRight, Flame, Palette } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ThemeToggle } from "@/components/landing/ThemeToggle";
@@ -13,6 +13,67 @@ import { lazy, Suspense } from "react";
 const Editor = lazy(() =>
   import("@monaco-editor/react").then((m) => ({ default: m.Editor ?? m.default }))
 );
+
+let _themesDefined = false;
+function defineCustomMonacoThemes(monaco: any) {
+  if (_themesDefined) return;
+  _themesDefined = true;
+  monaco.editor.defineTheme("monokai", {
+    base: "vs-dark", inherit: true,
+    rules: [
+      { token: "comment", foreground: "75715e", fontStyle: "italic" },
+      { token: "keyword", foreground: "f92672" },
+      { token: "string", foreground: "e6db74" },
+      { token: "number", foreground: "ae81ff" },
+      { token: "type", foreground: "66d9ef" },
+    ],
+    colors: { "editor.background": "#272822", "editor.foreground": "#f8f8f2", "editorLineNumber.foreground": "#75715e" },
+  });
+  monaco.editor.defineTheme("dracula", {
+    base: "vs-dark", inherit: true,
+    rules: [
+      { token: "comment", foreground: "6272a4", fontStyle: "italic" },
+      { token: "keyword", foreground: "ff79c6" },
+      { token: "string", foreground: "f1fa8c" },
+      { token: "number", foreground: "bd93f9" },
+      { token: "type", foreground: "8be9fd" },
+    ],
+    colors: { "editor.background": "#282a36", "editor.foreground": "#f8f8f2", "editorLineNumber.foreground": "#6272a4" },
+  });
+  monaco.editor.defineTheme("github-dark", {
+    base: "vs-dark", inherit: true,
+    rules: [
+      { token: "comment", foreground: "8b949e", fontStyle: "italic" },
+      { token: "keyword", foreground: "ff7b72" },
+      { token: "string", foreground: "a5d6ff" },
+      { token: "number", foreground: "79c0ff" },
+      { token: "type", foreground: "ffa657" },
+    ],
+    colors: { "editor.background": "#0d1117", "editor.foreground": "#c9d1d9", "editorLineNumber.foreground": "#484f58" },
+  });
+  monaco.editor.defineTheme("solarized-light", {
+    base: "vs", inherit: true,
+    rules: [
+      { token: "comment", foreground: "93a1a1", fontStyle: "italic" },
+      { token: "keyword", foreground: "859900" },
+      { token: "string", foreground: "2aa198" },
+      { token: "number", foreground: "d33682" },
+      { token: "type", foreground: "b58900" },
+    ],
+    colors: { "editor.background": "#fdf6e3", "editor.foreground": "#586e75", "editorLineNumber.foreground": "#93a1a1" },
+  });
+  monaco.editor.defineTheme("nord", {
+    base: "vs-dark", inherit: true,
+    rules: [
+      { token: "comment", foreground: "616e88", fontStyle: "italic" },
+      { token: "keyword", foreground: "81a1c1" },
+      { token: "string", foreground: "a3be8c" },
+      { token: "number", foreground: "b48ead" },
+      { token: "type", foreground: "8fbcbb" },
+    ],
+    colors: { "editor.background": "#2e3440", "editor.foreground": "#d8dee9", "editorLineNumber.foreground": "#4c566a" },
+  });
+}
 
 type Analysis = {
   id: string;
@@ -94,6 +155,26 @@ function AppPage() {
   const [mode, setMode] = useState<"explain" | "bugs" | "optimize" | "security" | "bangla">("explain");
   const fileRef = useRef<HTMLInputElement>(null);
   const navigate2 = useNavigate();
+  const EDITOR_THEMES = [
+    { id: "auto", label: "Auto (system)" },
+    { id: "vs-light", label: "Light" },
+    { id: "vs-dark", label: "Dark" },
+    { id: "hc-black", label: "High Contrast" },
+    { id: "monokai", label: "Monokai" },
+    { id: "dracula", label: "Dracula" },
+    { id: "github-dark", label: "GitHub Dark" },
+    { id: "solarized-light", label: "Solarized Light" },
+    { id: "nord", label: "Nord" },
+  ] as const;
+  const [editorTheme, setEditorTheme] = useState<string>("auto");
+  useEffect(() => {
+    const saved = typeof window !== "undefined" ? localStorage.getItem("workspace.editorTheme") : null;
+    if (saved) setEditorTheme(saved);
+  }, []);
+  useEffect(() => {
+    if (typeof window !== "undefined") localStorage.setItem("workspace.editorTheme", editorTheme);
+  }, [editorTheme]);
+  const resolvedEditorTheme = editorTheme === "auto" ? (isDark ? "vs-dark" : "vs-light") : editorTheme;
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
@@ -386,10 +467,10 @@ function AppPage() {
 
       <div className="grid lg:grid-cols-[260px_1fr] min-h-[calc(100vh-3.5rem)]">
         {/* History panel */}
-        <aside className="border-r-2 border-foreground bg-subtle/40 p-3 space-y-3 overflow-y-auto max-h-[calc(100vh-3.5rem)]">
+        <aside className="order-2 lg:order-1 border-t-2 lg:border-t-0 lg:border-r-2 border-foreground bg-subtle/40 p-3 space-y-3 overflow-y-auto lg:max-h-[calc(100vh-3.5rem)]">
           <button
             onClick={newAnalysis}
-            className="w-full h-10 rounded-xl border-2 border-foreground bg-[var(--lime)] font-bold text-[13px] shadow-pop hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all inline-flex items-center justify-center gap-1.5"
+            className="w-full h-10 rounded-xl border-2 border-foreground bg-[var(--lime)] text-[oklch(0.18_0.02_270)] font-bold text-[13px] shadow-pop hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all inline-flex items-center justify-center gap-1.5"
           >
             <Plus className="h-4 w-4" /> New analysis
           </button>
@@ -485,7 +566,7 @@ function AppPage() {
         </aside>
 
         {/* Main */}
-        <main className="p-3 sm:p-4 lg:p-6 space-y-4">
+        <main className="order-1 lg:order-2 p-3 sm:p-4 lg:p-6 space-y-4">
           {/* Title row */}
           <div className="flex flex-wrap items-center gap-2">
             <input
@@ -522,6 +603,17 @@ function AppPage() {
               >
                 <Save className="h-3.5 w-3.5" /><span className="hidden sm:inline">{saving ? "Saving…" : "Save"}</span>
               </button>
+              <label className="h-9 px-2.5 rounded-xl border-2 border-foreground bg-card text-foreground hover:bg-subtle text-[12.5px] font-semibold inline-flex items-center gap-1.5" title="Editor theme">
+                <Palette className="h-3.5 w-3.5" />
+                <select
+                  value={editorTheme}
+                  onChange={(e) => setEditorTheme(e.target.value)}
+                  className="bg-transparent outline-none font-semibold text-[12.5px] max-w-[120px] sm:max-w-none"
+                  aria-label="Editor theme"
+                >
+                  {EDITOR_THEMES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+                </select>
+              </label>
             </div>
             <div className="flex flex-wrap items-center gap-1.5 ml-auto">
               <button onClick={startQuiz} className="h-10 px-3.5 rounded-xl border-2 border-foreground bg-[var(--violet)] text-[oklch(0.18_0.02_270)] font-bold text-[13px] shadow-pop hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all inline-flex items-center gap-1.5">
@@ -576,9 +668,10 @@ function AppPage() {
                   height="480px"
                   language={monacoLang(language)}
                   value={code}
-                  theme={isDark ? "vs-dark" : "vs-light"}
+                  theme={resolvedEditorTheme}
                   onChange={(v) => setCode(v ?? "")}
                   onMount={(editor, monaco) => {
+                    defineCustomMonacoThemes(monaco);
                     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => analyze());
                   }}
                   options={{
