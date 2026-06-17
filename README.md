@@ -75,31 +75,18 @@ Python · JavaScript · TypeScript · Java · C · C++ · C# · Go · PHP · Rus
 codesenseai/
 
 ├── public/               # Static assets
-
 ├── src/
-
 │   ├── components/       # Reusable UI components
-
 │   ├── routes/           # TanStack file-based routes (pages)
-
 │   ├── hooks/            # Custom React hooks
-
 │   ├── lib/              # Utility functions and Supabase client
-
 │   └── integrations/     # Supabase type-safe integration layer
-
 ├── supabase/
-
 │   └── functions/        # Supabase Edge Functions (AI analysis logic)
-
 ├── .env                  # Environment variables (see setup below)
-
 ├── vite.config.ts        # Vite config (powered by Lovable preset)
-
 ├── wrangler.jsonc        # Cloudflare Workers deployment config
-
 ├── components.json       # shadcn/ui config
-
 └── package.json
 ```
 ---
